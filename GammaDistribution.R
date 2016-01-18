@@ -2,7 +2,7 @@ library(MCMCpack)
 
 
 calcWeight <- function(gammaInv, diffGammaInv) {
-  weight = (1/length(n))*(sum(diffGammInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv)
+  weight = (1/length(gammaInv))*(sum(diffGammaInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv)
   return(weight)
 }
 
@@ -39,9 +39,15 @@ invGammaCumulative <- function(u, alpha) {
 }
 
 diffInvGammaCumulative <- function(u) {
-  firstPoint = invGammaCumulative(u, alpha)
-  secondPoint = invGammaCumulative(u+hStep, alpha)
-  return((secondPoint - firstPoint)/hStep)
+  if(u+hStep < 1) {
+    firstPoint = invGammaCumulative(u, alpha)
+    secondPoint = invGammaCumulative(u+hStep, alpha)
+    return((secondPoint - firstPoint)/hStep)  
+  } else {
+    firstPoint = invGammaCumulative(u-hStep, alpha)
+    secondPoint = invGammaCumulative(u, alpha)
+    return((secondPoint - firstPoint)/hStep)  
+  }
 }
 
 gammaDensity <- function(x) {
@@ -73,3 +79,19 @@ for(i in 1:length(u)) {
 }
 plot(u,largeF)
 lines(u[1:100],diffF)
+
+NUM_POINTS = 20
+weights = rep(0, NUM_SAMPLES)
+for(i in 1:NUM_SAMPLES) {
+  u = runif(NUM_POINTS)
+  diffF = rep(0, NUM_POINTS)
+  invF = rep(0, NUM_POINTS)
+  for(j in 1:NUM_POINTS) {
+    invF[j] = invGammaCumulative(u[j], alpha)
+    diffF[j] = diffInvGammaCumulative(u[j])
+  }
+  weights[i] = calcWeight(invF, diffF)
+  print(i)
+}
+
+hist(weights, breaks = 200)
