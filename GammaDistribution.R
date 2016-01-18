@@ -38,8 +38,10 @@ invGammaCumulative <- function(u, alpha) {
   return(x)
 }
 
-diffInvGammaCumulative <- function() {
-  
+diffInvGammaCumulative <- function(u) {
+  firstPoint = invGammaCumulative(u, alpha)
+  secondPoint = invGammaCumulative(u+hStep, alpha)
+  return((secondPoint - firstPoint)/hStep)
 }
 
 gammaDensity <- function(x) {
@@ -47,6 +49,7 @@ gammaDensity <- function(x) {
 }
 
 alpha = 2
+hStep = 0.01
 
 NUM_SAMPLES = 1000
 xsamp = rep(0, NUM_SAMPLES)
@@ -58,4 +61,15 @@ hist(xsamp)
 xdata = dgamma(seq(0,8, by=0.1),2)
 plot(xdata)
 
-u = runif()
+u = seq(0,1,by=0.01)
+largeF = rep(0,length(u))
+diffF = rep(0,length(u)-1)
+for(i in 1:length(u)) {
+  largeF[i] = invGammaCumulative(u[i],alpha)
+  if(i<length(u)) {
+    diffF[i] = diffInvGammaCumulative(u[i])  
+  }
+  print(i)
+}
+plot(u,largeF)
+lines(u[1:100],diffF)
