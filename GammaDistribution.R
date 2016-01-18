@@ -1,9 +1,9 @@
 library(MCMCpack)
 
 
-calcWeight <- function(u, alpha, beta) {
-  
-  
+calcWeight <- function(gammaInv, diffGammaInv) {
+  weight = (1/length(n))*(sum(diffGammInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv)
+  return(weight)
 }
 
 invGammaCumulative <- function(u, alpha) {
@@ -48,7 +48,7 @@ gammaDensity <- function(x) {
   return(dgamma(x, alpha,1))  
 }
 
-alpha = 2
+alpha = 7.5
 hStep = 0.01
 
 NUM_SAMPLES = 1000
