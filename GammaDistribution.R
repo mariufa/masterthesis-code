@@ -20,8 +20,14 @@ invGammaCumulative <- function(u, alpha) {
       direction = 1
     }
     
-    integral = integrate(gammaDensity, 0, x)
-    integralValue = integral$value
+    if(method == "integrate") {
+      integral = integrate(gammaDensity, 0, x)
+      integralValue = integral$value  
+    } else if(method == "pgamma") {
+      integral = pgamma(x, alpha)
+      integralValue = integral
+    }
+    
     
     # Going left and pass the point
     if ((u > integralValue) && (direction == -1)) {
@@ -54,8 +60,9 @@ gammaDensity <- function(x) {
   return(dgamma(x, alpha,1))  
 }
 
-alpha = 7.5
+alpha = 2
 hStep = 0.01
+method = "integrate"
 
 NUM_SAMPLES = 1000
 xsamp = rep(0, NUM_SAMPLES)
