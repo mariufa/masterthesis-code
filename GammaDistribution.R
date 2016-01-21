@@ -9,7 +9,7 @@ calcWeight <- function(gammaInv, diffGammaInv) {
 invGammaCumulative <- function(u, alpha) {
   x = 0
   stepSize = 0.1
-  tolerance = 0.0001
+  tolerance = 0.00001
   direction = 1
   integralValue = 0
   
@@ -24,7 +24,7 @@ invGammaCumulative <- function(u, alpha) {
       integral = integrate(gammaDensity, 0, x)
       integralValue = integral$value  
     } else if(method == "pgamma") {
-      integral = pgamma(x, alpha)
+      integral = pgamma(x, shape=alpha, scale=1)
       integralValue = integral
     }
     
@@ -61,10 +61,18 @@ gammaDensity <- function(x) {
 }
 
 alpha = 2
-hStep = 0.01
-method = "integrate"
-
+beta = 2
+hStep = 0.004
+method = "pgamma"
 NUM_SAMPLES = 1000
+NUM_POINTS = 10
+
+# Generate data
+gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
+hist(gammaData)
+
+
+# Testing
 xsamp = rep(0, NUM_SAMPLES)
 for(i in 1:NUM_SAMPLES) {
   u = runif(1)
