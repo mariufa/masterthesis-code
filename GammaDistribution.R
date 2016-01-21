@@ -60,6 +60,35 @@ gammaDensity <- function(x) {
   return(dgamma(x, alpha,1))  
 }
 
+findAlpha <- function(u, s2) {
+  alphaValue = 0.1
+  stepSize = 0.01
+  direction = 1
+  tolerance = 0.0001
+  tau2Value = 0
+  
+  while(abs(s2 - tau2Value) > tolerance) {
+    alphaValue = alphaValue + direction*stepSize
+    if(alphaValue<=0) {
+      alphaValue = 0.1
+      direction = -1
+    }
+    
+    tau2Value = calcValueTau2(u, alphaValue)
+    
+    if ((s2 > tau2Value) && (direction == 1)) {
+      stepSize = stepSize/2
+      direction = -1
+    }
+    
+    if ((s2 < tau2Value) && (direction == -1)) {
+      stepSize = stepSize/2
+      direction = 1
+    }
+    
+  }
+}
+
 calcValueTau2 <- function(u, alpha) {
   largeFInv = rep(0, length(u))
   for(i in 1:length(u)) {
