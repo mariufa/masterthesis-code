@@ -87,6 +87,15 @@ findAlpha <- function(u, s2) {
     }
     
   }
+  return(alphaValue)
+}
+
+findBeta <- function(s1, u, alphaValue) {
+  largeFInv = rep(0, length(u))
+  for(i in 1:length(u)) {
+    largeFInv[i] = invGammaCumulative(u[i], alphaValue)
+  }
+  return(s1*length(u)/(sum(largeFInv)))
 }
 
 calcValueTau2 <- function(u, alpha) {
