@@ -60,6 +60,14 @@ gammaDensity <- function(x) {
   return(dgamma(x, alpha,1))  
 }
 
+calcValueTau2 <- function(u, alpha) {
+  largeFInv = rep(0, length(u))
+  for(i in 1:length(u)) {
+    largeFInv = invGammaCumulative(u[i], alpha)
+  }
+  return(length(u)*((prod(largeFInv))^(1/length(u)))/sum(largeFInv))
+}
+
 alpha = 2
 beta = 2
 hStep = 0.004
@@ -70,6 +78,23 @@ NUM_POINTS = 10
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
 hist(gammaData)
+# Calculation of statistics
+s1 = sum(gammaData)/NUM_POINTS
+s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
+# Plot of tau 2 with respect to alpha
+alpharange = seq(0.1 , 200, by = 0.1)
+tau2 = rep(0, length(alpharange))
+u = runif(NUM_POINTS)
+for(i in 1:length(alpharange)) {
+  tau2[i]= calcValueTau2(u, alpharange[i])
+  print(i)
+}
+plot(tau2[50:length(tau2)], type="l")
+
+
+# Generation of new sample
+u = runif(NUM_POINTS)
+
 
 
 # Testing
