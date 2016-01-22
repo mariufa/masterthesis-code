@@ -60,9 +60,9 @@ gammaDensity <- function(x) {
   return(dgamma(x, alpha,1))  
 }
 
-findAlpha <- function(u, s2) {
+findAlpha <- function(s2, u) {
   alphaValue = 0.1
-  stepSize = 0.01
+  stepSize = 10
   direction = 1
   tolerance = 0.0001
   tau2Value = 0
@@ -74,6 +74,7 @@ findAlpha <- function(u, s2) {
       direction = -1
     }
     
+    print(s2 - tau2Value)
     tau2Value = calcValueTau2(u, alphaValue)
     
     if ((s2 > tau2Value) && (direction == 1)) {
@@ -111,7 +112,7 @@ beta = 2
 hStep = 0.004
 method = "pgamma"
 NUM_SAMPLES = 1000
-NUM_POINTS = 10
+NUM_POINTS = 100
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -120,7 +121,7 @@ hist(gammaData)
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
 # Plot of tau 2 with respect to alpha
-alpharange = seq(0.1 , 200, by = 0.1)
+alpharange = seq(0.1 , 10, by = 0.1)
 tau2 = rep(0, length(alpharange))
 u = runif(NUM_POINTS)
 for(i in 1:length(alpharange)) {
@@ -132,7 +133,8 @@ plot(tau2[50:length(tau2)], type="l")
 
 # Generation of new sample
 u = runif(NUM_POINTS)
-
+estAlpha = findAlpha(s2, u)
+estBeta = findBeta(s1, u, estAlpha)
 
 
 # Testing
