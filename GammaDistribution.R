@@ -56,6 +56,16 @@ diffInvGammaCumulative <- function(u) {
   }
 }
 
+calcDerivateFunction <- function(u, alphaValue) {
+ largeFInv = invGammaCumulative(u, alphaValue)
+ integralPart = integrate(integralFunction, 0, largeFInv)
+ return((digamma(alphaValue)*u - integralPart)*gamma(alphaValue)/((largeFInv^(alphaValue - 1))*exp(-largeFInv)))
+}
+
+integralFunction <- function(u) {
+  return(log(u)*(y^(alphaValue - 1))*exp(u)/gamma(alphaValue))
+}
+
 gammaDensity <- function(x) {
   return(dgamma(x, alpha,1))  
 }
@@ -133,7 +143,8 @@ for(i in 1:length(alpharange)) {
 }
 plot(tau2, type="l")
 
-
+# Plot of derivatve of inverse cumulative distribution
+alphaValue = alpha
 
 # Generation of new sample
 u = runif(NUM_POINTS)
@@ -141,41 +152,3 @@ estAlpha = findAlpha(s2, u)
 estBeta = findBeta(s1, u, estAlpha)
 
 
-# Testing
-xsamp = rep(0, NUM_SAMPLES)
-for(i in 1:NUM_SAMPLES) {
-  u = runif(1)
-  xsamp[i] = invGammaCumulative(u, alpha)
-}
-hist(xsamp)
-xdata = dgamma(seq(0,8, by=0.1),2)
-plot(xdata)
-
-u = seq(0,1,by=0.01)
-largeF = rep(0,length(u))
-diffF = rep(0,length(u)-1)
-for(i in 1:length(u)) {
-  largeF[i] = invGammaCumulative(u[i],alpha)
-  if(i<length(u)) {
-    diffF[i] = diffInvGammaCumulative(u[i])  
-  }
-  print(i)
-}
-plot(u,largeF)
-lines(u[1:100],diffF)
-
-NUM_POINTS = 20
-weights = rep(0, NUM_SAMPLES)
-for(i in 1:NUM_SAMPLES) {
-  u = runif(NUM_POINTS)
-  diffF = rep(0, NUM_POINTS)
-  invF = rep(0, NUM_POINTS)
-  for(j in 1:NUM_POINTS) {
-    invF[j] = invGammaCumulative(u[j], alpha)
-    diffF[j] = diffInvGammaCumulative(u[j])
-  }
-  weights[i] = calcWeight(invF, diffF)
-  print(i)
-}
-
-hist(weights, breaks = 200)
