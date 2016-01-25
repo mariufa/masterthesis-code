@@ -99,20 +99,24 @@ findBeta <- function(s1, u, alphaValue) {
   return(s1*length(u)/(sum(largeFInv)))
 }
 
-calcValueTau2 <- function(u, alpha) {
-  largeFInv = rep(0, length(u))
-  for(i in 1:length(u)) {
-    largeFInv = invGammaCumulative(u[i], alpha)
+calcValueTau2 <- function(uValues, alphaValue) {
+  largeFInv = rep(0, length(uValues))
+  for(i in 1:length(uValues)) {
+    largeFInv[i] = invGammaCumulative(uValues[i], alphaValue)
   }
-  return(length(u)*((prod(largeFInv))^(1/length(u)))/sum(largeFInv))
+  return(length(uValues)*((prod(largeFInv))^(1/length(uValues)))/sum(largeFInv))
+}
+
+calcValueTau2Method2 <- function(x) {
+  return(length(x)*((prod(x))^(1/length(x)))/sum(x))
 }
 
 alpha = 2
-beta = 2
+beta = 1
 hStep = 0.004
 method = "pgamma"
 NUM_SAMPLES = 1000
-NUM_POINTS = 100
+NUM_POINTS = 3
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -124,12 +128,19 @@ s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
 alpharange = seq(0.1 , 10, by = 0.1)
 tau2 = rep(0, length(alpharange))
 u = runif(NUM_POINTS)
+#u = pgamma(gammaData, alpha)
 for(i in 1:length(alpharange)) {
   tau2[i]= calcValueTau2(u, alpharange[i])
-  print(i)
+  #tau2[i] = calcValueTau2Method2(gammaData)
 }
-plot(tau2[50:length(tau2)], type="l")
+plot(tau2, type="l")
 
+
+largeFInv = rep(0, length(u))
+for(i in 1:length(u)) {
+  largeFInv[i] = invGammaCumulative(u[i], 8)
+}
+tau22 = length(u)*((prod(largeFInv))^(1/length(u)))/sum(largeFInv)
 
 # Generation of new sample
 u = runif(NUM_POINTS)
