@@ -59,11 +59,12 @@ diffInvGammaCumulative <- function(u) {
 calcDerivateFunction <- function(u, alphaValue) {
  largeFInv = invGammaCumulative(u, alphaValue)
  integralPart = integrate(integralFunction, 0, largeFInv)
- return((digamma(alphaValue)*u - integralPart)*gamma(alphaValue)/((largeFInv^(alphaValue - 1))*exp(-largeFInv)))
+ print(integralPart$value)
+ return((digamma(alphaValue)*u - integralPart$value)*gamma(alphaValue)/((largeFInv^(alphaValue - 1))*exp(-largeFInv)))
 }
 
-integralFunction <- function(u) {
-  return(log(u)*(y^(alphaValue - 1))*exp(u)/gamma(alphaValue))
+integralFunction <- function(y) {
+  return(log(y)*(y^(alphaValue - 1))*exp(-y)/gamma(alphaValue))
 }
 
 gammaDensity <- function(x) {
@@ -121,8 +122,8 @@ calcValueTau2Method2 <- function(x) {
 }
 
 alpha = 2
-beta = 1
-hStep = 0.004
+beta = 2
+hStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 100
@@ -143,8 +144,21 @@ for(i in 1:length(alpharange)) {
 }
 plot(tau2, type="l")
 
-# Plot of derivatve of inverse cumulative distribution
+# Plot of derivatve of inverse cumulative distribution and the cumulative function
 alphaValue = alpha
+urange = seq(0.01, 0.99, by=0.01)
+diff1 = rep(0, length(urange))
+diff2 = rep(0, length(urange))
+invF = rep(0, length(urange))
+for(i in 1:length(urange)) {
+  invF[i] = invGammaCumulative(urange[i], alpha)
+  diff1[i] = calcDerivateFunction(urange[i], alphaValue)
+  diff2[i] = diffInvGammaCumulative(urange[i])
+}
+plot(urange, invF, type="l", ylim=c(0, 15))
+lines(urange, diff1, col="red")
+lines(urange, diff2, col="green")
+
 
 # Generation of new sample
 u = runif(NUM_POINTS)
