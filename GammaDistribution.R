@@ -71,20 +71,19 @@ findAlpha <- function(s2, u) {
     alphaValue = alphaValue + direction*stepSize
     if(alphaValue<=0) {
       alphaValue = 0.1
-      direction = -1
+      direction = 1
     }
     
-    print(s2 - tau2Value)
     tau2Value = calcValueTau2(u, alphaValue)
     
-    if ((s2 > tau2Value) && (direction == 1)) {
-      stepSize = stepSize/2
-      direction = -1
-    }
-    
-    if ((s2 < tau2Value) && (direction == -1)) {
+    if ((s2 > tau2Value) && (direction == -1)) {
       stepSize = stepSize/2
       direction = 1
+    }
+    
+    if ((s2 < tau2Value) && (direction == 1)) {
+      stepSize = stepSize/2
+      direction = -1
     }
     
   }
@@ -99,12 +98,12 @@ findBeta <- function(s1, u, alphaValue) {
   return(s1*length(u)/(sum(largeFInv)))
 }
 
-calcValueTau2 <- function(uValues, alphaValue) {
-  largeFInv = rep(0, length(uValues))
-  for(i in 1:length(uValues)) {
-    largeFInv[i] = invGammaCumulative(uValues[i], alphaValue)
+calcValueTau2 <- function(u, alphaValue) {
+  largeFInv = rep(0, length(u))
+  for(i in 1:length(u)) {
+    largeFInv[i] = invGammaCumulative(u[i], alphaValue)
   }
-  return(length(uValues)*((prod(largeFInv))^(1/length(uValues)))/sum(largeFInv))
+  return(length(u)*((prod(largeFInv))^(1/length(u)))/sum(largeFInv))
 }
 
 calcValueTau2Method2 <- function(x) {
@@ -116,7 +115,7 @@ beta = 1
 hStep = 0.004
 method = "pgamma"
 NUM_SAMPLES = 1000
-NUM_POINTS = 3
+NUM_POINTS = 100
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -124,23 +123,17 @@ hist(gammaData)
 # Calculation of statistics
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
+
 # Plot of tau 2 with respect to alpha
 alpharange = seq(0.1 , 10, by = 0.1)
 tau2 = rep(0, length(alpharange))
 u = runif(NUM_POINTS)
-#u = pgamma(gammaData, alpha)
 for(i in 1:length(alpharange)) {
   tau2[i]= calcValueTau2(u, alpharange[i])
-  #tau2[i] = calcValueTau2Method2(gammaData)
 }
 plot(tau2, type="l")
 
 
-largeFInv = rep(0, length(u))
-for(i in 1:length(u)) {
-  largeFInv[i] = invGammaCumulative(u[i], 8)
-}
-tau22 = length(u)*((prod(largeFInv))^(1/length(u)))/sum(largeFInv)
 
 # Generation of new sample
 u = runif(NUM_POINTS)
