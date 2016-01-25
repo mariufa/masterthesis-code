@@ -59,7 +59,6 @@ diffInvGammaCumulative <- function(u) {
 calcDerivateFunction <- function(u, alphaValue) {
  largeFInv = invGammaCumulative(u, alphaValue)
  integralPart = integrate(integralFunction, 0, largeFInv)
- print(integralPart$value)
  return((digamma(alphaValue)*u - integralPart$value)*gamma(alphaValue)/((largeFInv^(alphaValue - 1))*exp(-largeFInv)))
 }
 
@@ -122,7 +121,7 @@ calcValueTau2Method2 <- function(x) {
 }
 
 alpha = 2
-beta = 2
+beta = 1
 hStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
