@@ -1,7 +1,45 @@
 library(MCMCpack)
 
+weightedUniform <- function(n) {
+  # Generate sample of from a weighted uniform distribution
+  # 
+  # Args:
+  #   n: number of points in sample
+  #   
+  # Returns:
+  #   A vector sample
+  uCurr = runif(n)
+  uProp = runif(n)
+  proposalProp = proportionalDensity(uProp)
+  proposalCurr = proportionalDensity(uCurr)
+}
+
+proportionalDensity <- function(u) {
+  # Calculate proportional density for indepence sampling
+  # 
+  # Args:
+  #   u: a vector from an uniform distribution
+  #   
+  # Returns:
+  #   A scalar value
+  gammaInv = rep(0, length(u))
+  diffGammaInv = rep(0, length(u))
+  for(i in 1:length(u)) {
+    gammaInv = invGammaCumulative(u[i], estAlpha)
+    diffGammaInv = diffInvGammaCumulative(u[i])
+  }
+  return(calcWeight(gammaInv, diffgammInv))
+}
 
 calcWeight <- function(gammaInv, diffGammaInv) {
+  # Calculate weigth for a gamma distribution
+  #
+  # Args:
+  #   gammaInv: A list of values from the inverse cumulative gamma.
+  #   diffGammaInv: A list of values from the derivative of the inverse cumulative gamma.
+  #   
+  # Returns:
+  #   A scalar value
   weight = (1/length(gammaInv))*(sum(diffGammaInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv)
   return(weight)
 }
