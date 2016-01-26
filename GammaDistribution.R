@@ -10,8 +10,15 @@ weightedUniform <- function(n) {
   #   A vector sample
   uCurr = runif(n)
   uProp = runif(n)
-  proposalProp = proportionalDensity(uProp)
-  proposalCurr = proportionalDensity(uCurr)
+  proportionalProp = proportionalDensity(uProp)
+  proportionalCurr = proportionalDensity(uCurr)
+  alphaVal = min(1, proportionalProp/proportionalCurr)
+  u = runif(1)
+  if (u <= alphaVal) {
+    return uProp
+  } else {
+    return uCurr
+  }
 }
 
 proportionalDensity <- function(u) {
