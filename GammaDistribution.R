@@ -13,11 +13,12 @@ weightedUniform <- function(n) {
   proportionalProp = proportionalDensity(uProp)
   proportionalCurr = proportionalDensity(uCurr)
   alphaVal = min(1, proportionalProp/proportionalCurr)
+  print(alphaVal)
   u = runif(1)
   if (u <= alphaVal) {
-    return uProp
+    return(uProp)
   } else {
-    return uCurr
+    return(uCurr)
   }
 }
 
@@ -32,10 +33,10 @@ proportionalDensity <- function(u) {
   gammaInv = rep(0, length(u))
   diffGammaInv = rep(0, length(u))
   for(i in 1:length(u)) {
-    gammaInv = invGammaCumulative(u[i], estAlpha)
-    diffGammaInv = diffInvGammaCumulative(u[i])
+    gammaInv[i] = invGammaCumulative(u[i], estAlpha)
+    diffGammaInv[i] = diffInvGammaCumulative(u[i])
   }
-  return(calcWeight(gammaInv, diffgammInv))
+  return(calcWeight(gammaInv, diffGammaInv))
 }
 
 calcWeight <- function(gammaInv, diffGammaInv) {
