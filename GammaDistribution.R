@@ -1,6 +1,6 @@
 library(MCMCpack)
 
-weightedUniform <- function(n) {
+weightedUniform <- function(n, numIterations) {
   # Generate sample of from a weighted uniform distribution
   # 
   # Args:
@@ -9,32 +9,37 @@ weightedUniform <- function(n) {
   # Returns:
   #   A vector sample
   uCurr = runif(n)
-  uProp = runif(n)
-  proportionalProp = proportionalDensity(uProp)
-  proportionalCurr = proportionalDensity(uCurr)
-  alphaVal = min(1, proportionalProp/proportionalCurr)
-  print(alphaVal)
-  u = runif(1)
-  if (u <= alphaVal) {
-    return(uProp)
-  } else {
-    return(uCurr)
+  alphaCurr = findAlpha(s2, uCurr)
+  for(i in 1:numIterations) {
+    uProp = runif(n)
+    alphaProp = findAlpha(s2, uProp)
+    proportionalProp = proportionalDensity(uProp, alphaProp)
+    proportionalCurr = proportionalDensity(uCurr, alphaCurr)
+    alphaVal = min(1, proportionalProp/proportionalCurr)
+    print(alphaVal)
+    u = runif(1)
+    if (u <= alphaVal) {
+      xCurr = uProp
+      alphaCurr = alphaProp
+    }
   }
+  return(xCurr)
 }
 
-proportionalDensity <- function(u) {
+proportionalDensity <- function(u, alpha) {
   # Calculate proportional density for indepence sampling
   # 
   # Args:
-  #   u: a vector from an uniform distribution
+  #   u: A vector from an uniform distribution.
+  #   alpha: A scalar value
   #   
   # Returns:
   #   A scalar value
   gammaInv = rep(0, length(u))
   diffGammaInv = rep(0, length(u))
   for(i in 1:length(u)) {
-    gammaInv[i] = invGammaCumulative(u[i], estAlpha)
-    diffGammaInv[i] = diffInvGammaCumulative(u[i])
+    gammaInv[i] = invGammaCumulative(u[i], alpha)
+    diffGammaInv[i] = diffAlphaInvGammaCumulative(u[i], alpha)
   }
   return(calcWeight(gammaInv, diffGammaInv))
 }
