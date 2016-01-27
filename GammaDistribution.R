@@ -91,6 +91,13 @@ invGammaCumulative <- function(u, alpha) {
 }
 
 diffInvGammaCumulative <- function(u) {
+  # Derivative of gamma distribution with respect to u
+  # 
+  # Args:
+  #   u: Scalar between 0 and 1
+  #   
+  # Returns:
+  #   Scalar. Derivative at point u.
   if(u+hStep < 1) {
     firstPoint = invGammaCumulative(u, alpha)
     secondPoint = invGammaCumulative(u+hStep, alpha)
@@ -100,6 +107,20 @@ diffInvGammaCumulative <- function(u) {
     secondPoint = invGammaCumulative(u, alpha)
     return((secondPoint - firstPoint)/hStep)  
   }
+}
+
+diffAlphaInvGammaCumulative <- function(u, alpha) {
+  # Derivative of gamma distribution with respect to alpha.
+  # 
+  # Args:
+  #   u: Scalar between 0 and 1.
+  #   alpha: Scalar larger than 0.
+  #   
+  # Returns:
+  #   Scalar value. Derivative at point alpha.
+  firstPoint = invGammaCumulative(u,alpha)
+  secondPoint = invGammaCumulative(u, alpha + alphaHStep)
+  return((secondPoint - firstPoint)/alphaHStep)
 }
 
 calcDerivateFunction <- function(u, alphaValue) {
@@ -169,6 +190,7 @@ calcValueTau2Method2 <- function(x) {
 alpha = 2
 beta = 1
 hStep = 0.01
+alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 100
@@ -203,6 +225,21 @@ for(i in 1:length(urange)) {
 plot(urange, invF, type="l", ylim=c(0, 15))
 lines(urange, diff1, col="red")
 lines(urange, diff2, col="green")
+
+# Plot of derivative of inverse cumulative distribution with respect to alpha and the cumulative function.
+alphaRange = seq(0.01, 10, by = 0.01)
+diff1 = rep(0, length(alphaRange))
+diff2 = rep(0, length(alphaRange))
+invF = rep(0, length(alphaRange))
+uValue = 0.5
+for(i in 1:length(alphaRange)) {
+  invF[i] = invGammaCumulative(uValue, alphaRange[i])
+  diff1[i] = calcDerivateFunction(uValue, alphaRange[i])
+  diff2[i] = diffAlphaInvGammaCumulative(uValue, alphaRange[i])
+}
+plot(alphaRange, invF, type="l", ylim=c(-1, 10))
+lines(alphaRange, diff1, col="red")
+lines(alphaRange, diff2, col="green")
 
 
 # Generation of new sample
