@@ -11,6 +11,7 @@ weightedUniform <- function(n, numIterations) {
   uCurr = runif(n)
   alphaCurr = findAlpha(s2, uCurr)
   uConv = rep(0, numIterations)
+  uTrace = rep(0, numIterations)
   for(i in 1:numIterations) {
     uProp = runif(n)
     alphaProp = findAlpha(s2, uProp)
@@ -19,15 +20,17 @@ weightedUniform <- function(n, numIterations) {
       proportionalCurr = proportionalDensity(uCurr, alphaCurr)
       alphaVal = min(1, proportionalProp/proportionalCurr)
       u = runif(1)
-      #print(i)
+      print(i)
       if (u <= alphaVal) {
         uCurr = uProp
         alphaCurr = alphaProp
       }  
     }
-    uConv[i] = uCurr[1]
+    uConv[i] = var(uCurr)
+    uTrace[i] = uCurr[1]
   }
   plot(uConv, type="l")
+  plot(uTrace, type="l")
   return(uCurr)
 }
 
