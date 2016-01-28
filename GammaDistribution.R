@@ -10,20 +10,25 @@ weightedUniform <- function(n, numIterations) {
   #   A vector sample
   uCurr = runif(n)
   alphaCurr = findAlpha(s2, uCurr)
+  uConv = rep(0, numIterations)
   for(i in 1:numIterations) {
     uProp = runif(n)
     alphaProp = findAlpha(s2, uProp)
-    proportionalProp = proportionalDensity(uProp, alphaProp)
-    proportionalCurr = proportionalDensity(uCurr, alphaCurr)
-    alphaVal = min(1, proportionalProp/proportionalCurr)
-    print(alphaVal)
-    u = runif(1)
-    if (u <= alphaVal) {
-      xCurr = uProp
-      alphaCurr = alphaProp
+    if(alphaProp != -1) {
+      proportionalProp = proportionalDensity(uProp, alphaProp)
+      proportionalCurr = proportionalDensity(uCurr, alphaCurr)
+      alphaVal = min(1, proportionalProp/proportionalCurr)
+      u = runif(1)
+      #print(i)
+      if (u <= alphaVal) {
+        uCurr = uProp
+        alphaCurr = alphaProp
+      }  
     }
+    uConv[i] = uCurr[1]
   }
-  return(xCurr)
+  plot(uConv, type="l")
+  return(uCurr)
 }
 
 proportionalDensity <- function(u, alpha) {
@@ -35,6 +40,7 @@ proportionalDensity <- function(u, alpha) {
   #   
   # Returns:
   #   A scalar value
+  
   gammaInv = rep(0, length(u))
   diffGammaInv = rep(0, length(u))
   for(i in 1:length(u)) {
@@ -143,21 +149,25 @@ gammaDensity <- function(x) {
 }
 
 findAlpha <- function(s2, u) {
+  
   alphaValue = 0.1
-  stepSize = 10
+  stepSize = 1
   direction = 1
   tolerance = 0.0001
   tau2Value = 0
-  
+  prevTau2Value = 0
+  it = 0
   while(abs(s2 - tau2Value) > tolerance) {
+    it = it + 1
     alphaValue = alphaValue + direction*stepSize
     if(alphaValue<=0) {
       alphaValue = 0.1
       direction = 1
     }
-    
+    prevTau2Value = tau2Value
     tau2Value = calcValueTau2(u, alphaValue)
-    
+    #print(abs(s2 - tau2Value))
+    #print(direction)
     if ((s2 > tau2Value) && (direction == -1)) {
       stepSize = stepSize/2
       direction = 1
@@ -168,7 +178,13 @@ findAlpha <- function(s2, u) {
       direction = -1
     }
     
+    if (it>100) {
+      print(it)
+      return(-1)
+    }
+    
   }
+  
   return(alphaValue)
 }
 
@@ -198,7 +214,7 @@ hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
-NUM_POINTS = 100
+NUM_POINTS = 3
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -251,5 +267,15 @@ lines(alphaRange, diff2, col="green")
 u = runif(NUM_POINTS)
 estAlpha = findAlpha(s2, u)
 estBeta = findBeta(s1, u, estAlpha)
+v = weightedUniform(NUM_POINTS,3000)
+alphaV = findAlpha(s2, v)    
+betaV = findBeta(s1, v, alphaV)
+newSample = rep(0, length(v))
+for(i in 1:length(v)) {
+  newSample[i] = betaV*invGammaCumulative(v[i], alphaV)
+}
+s1Sample = sum(newSample)/length(newSample)
+s2Sample = NUM_POINTS*((prod(newSample))^(1/NUM_POINTS))/sum(newSample)
+
 
 
