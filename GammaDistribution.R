@@ -280,5 +280,37 @@ for(i in 1:length(v)) {
 s1Sample = sum(newSample)/length(newSample)
 s2Sample = NUM_POINTS*((prod(newSample))^(1/NUM_POINTS))/sum(newSample)
 
+# Average integral.
+u = 0.5
+alpha = 2
+alphaValue = 2
+averageSample = 0
+NUM_SAMPLES = 10000
+for(i in 1:NUM_SAMPLES) {
+  averageSample = averageSample + invGammaCumulative(runif(1), alpha)
+}
+averageSample = averageSample/NUM_SAMPLES
+integralPart = integrate(integralFunction, 0, Inf)
 
+u = 0.5
+upperBound = invGammaCumulative(u, alpha)
+integralPart2 = integrate(integralFunction, 0, upperBound)
 
+# Plot of integral function
+yrange = seq(0,10,0.1)
+integralfunctionValues = rep(0, length(yrange))
+for(i in 1:length(yrange)) {
+  integralfunctionValues[i] = integralFunction(yrange[i])
+}
+plot(yrange, integralfunctionValues, type="l")
+
+# Unweighted samples.
+u = runif(NUM_POINTS)
+alphaU = findAlpha(s2, u)
+betaU = findBeta(s1, u, alphaU)
+unweightedSample = rep(0, length(u))
+for(i in 1:length(u)) {
+  unweightedSample[i] = betaU*invGammaCumulative(u[i], alphaU)
+}
+s1Unweighted = sum(unweightedSample)/length(unweightedSample)
+s2Unweighted = NUM_POINTS*((prod(unweightedSample))^(1/NUM_POINTS))/sum(unweightedSample)
