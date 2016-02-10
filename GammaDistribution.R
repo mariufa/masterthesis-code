@@ -218,6 +218,8 @@ alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 3
+alphaUpperBound = 50
+alphaLowerBound = 0.5
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -270,7 +272,7 @@ lines(alphaRange, diff2, col="green")
 u = runif(NUM_POINTS)
 estAlpha = findAlpha(s2, u)
 estBeta = findBeta(s1, u, estAlpha)
-v = weightedUniform(NUM_POINTS,3000)
+v = weightedUniform(NUM_POINTS,500)
 alphaV = findAlpha(s2, v)    
 betaV = findBeta(s1, v, alphaV)
 newSample = rep(0, length(v))
