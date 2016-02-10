@@ -190,8 +190,8 @@ findAlpha <- function(s2, u) {
   return(alphaValue)
 }
 
-isAlphaInsideValidInterval <- function(alphaValue, direction) {
-  return((alphaValue < alphaLowerBound && direction == -1) || (alphaValue > alphaUpperbound && direction == -1))
+isAlphaOutsideValidInterval <- function(alphaValue, direction) {
+  return((alphaValue < alphaLowerBound && direction == -1) || (alphaValue > alphaUpperBound && direction == 1))
 }
 
 findBeta <- function(s1, u, alphaValue) {
@@ -221,7 +221,7 @@ alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 3
-alphaUpperBound = 50
+alphaUpperBound = 10
 alphaLowerBound = 0.5
 
 # Generate data
@@ -275,7 +275,7 @@ lines(alphaRange, diff2, col="green")
 u = runif(NUM_POINTS)
 estAlpha = findAlpha(s2, u)
 estBeta = findBeta(s1, u, estAlpha)
-v = weightedUniform(NUM_POINTS,500)
+v = weightedUniform(NUM_POINTS,10000)
 alphaV = findAlpha(s2, v)    
 betaV = findBeta(s1, v, alphaV)
 newSample = rep(0, length(v))
