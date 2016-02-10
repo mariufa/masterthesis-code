@@ -181,14 +181,17 @@ findAlpha <- function(s2, u) {
       direction = -1
     }
     
-    if (it>100) {
-      print(it)
+    if(isAlphaOutsideValidInterval(alphaValue, direction)) {
       return(-1)
-    }
+    }  
     
   }
   
   return(alphaValue)
+}
+
+isAlphaInsideValidInterval <- function(alphaValue, direction) {
+  return((alphaValue < alphaLowerBound && direction == -1) || (alphaValue > alphaUpperbound && direction == -1))
 }
 
 findBeta <- function(s1, u, alphaValue) {
