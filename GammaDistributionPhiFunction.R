@@ -312,7 +312,7 @@ while(sampleIndex <= NUM_SAMPLES) {
   print(iterationNumber)
   iterationNumber = iterationNumber + 1
 }
-hist(weighstW)
+hist(weightsW)
 
 
 
