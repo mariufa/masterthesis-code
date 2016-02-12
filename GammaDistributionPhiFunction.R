@@ -214,6 +214,10 @@ findAlpha <- function(s2, u) {
     if(isAlphaOutsideValidInterval(alphaValue, direction)) {
       return(-1)
     }  
+    print(stepSize)
+    if(it==100) {
+      return(-1)
+    }
     
   }
   
@@ -268,7 +272,7 @@ alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 3
-alphaUpperBound = 10
+alphaUpperBound = 5
 alphaLowerBound = 0.5
 
 # Generate data
@@ -289,12 +293,15 @@ while(sampleIndex <= NUM_SAMPLES) {
   u = runif(NUM_POINTS)
   estAlpha = findAlpha(s2, u)
   if(estAlpha != -1) {
-    weightW[sampleIndex] = calcWeight(u, estAlpha)
+    weightsW[sampleIndex] = calcWeight(u, estAlpha)
     phi[sampleIndex] = calcPhi(u, alpha)
-    estBeta = findBeta(s1, u, estAlpha)
     sampleIndex = sampleIndex + 1
+    #print(sampleIndex)
   }
+  print(iterationNumber)
   iterationNumber = iterationNumber + 1
 }
+hist(weighstW)
+
 
 
