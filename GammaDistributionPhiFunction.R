@@ -173,6 +173,17 @@ integralFunction <- function(y) {
   return(log(y)*(y^(alphaValue - 1))*exp(-y)/gamma(alphaValue))
 }
 
+optimfindAlpha <- function() {
+  if((calcValueTau2(u, alphaUpperBound) < s2) || (calcValueTau2(u, alphaLowerBound) > s2)) {
+    return(-1)
+  }
+  return(optim(c(0.1), optimFunction, lower=alphaLowerBound, upper=alphaUpperBound, method="Brent")$par)
+}
+
+optimFunction <- function(alpha) {
+  return(abs(s2-calcValueTau2(u, alpha)))
+}
+
 findAlpha <- function(s2, u) {
   # Function to calculate alpha value
   # 
@@ -273,7 +284,7 @@ method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 3
 alphaUpperBound = 5
-alphaLowerBound = 0.5
+alphaLowerBound = 0.1
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -291,7 +302,7 @@ sampleIndex = 1
 iterationNumber = 0
 while(sampleIndex <= NUM_SAMPLES) {
   u = runif(NUM_POINTS)
-  estAlpha = findAlpha(s2, u)
+  estAlpha = optimfindAlpha()
   if(estAlpha != -1) {
     weightsW[sampleIndex] = calcWeight(u, estAlpha)
     phi[sampleIndex] = calcPhi(u, alpha)
@@ -301,7 +312,7 @@ while(sampleIndex <= NUM_SAMPLES) {
   print(iterationNumber)
   iterationNumber = iterationNumber + 1
 }
-hist(weighstW)
+hist(weightsW)
 
 
 
