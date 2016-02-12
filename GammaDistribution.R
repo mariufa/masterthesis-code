@@ -238,7 +238,7 @@ u = runif(NUM_POINTS)
 for(i in 1:length(alpharange)) {
   tau2[i]= calcValueTau2(u, alpharange[i])
 }
-plot(tau2, type="l")
+plot(alpharange,tau2, type="l")
 
 # Plot of derivatve of inverse cumulative distribution and the cumulative function
 alphaValue = alpha
