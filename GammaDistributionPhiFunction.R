@@ -86,7 +86,12 @@ calcWeight <- function(u, alpha) {
 }
 
 calcPhi <- function(u, alpha) {
-  
+  phiPoint = rep(0, length(u))
+  for(i in 1:length(u)) {
+    xValue = invGammaCumulative(u[i], alpha)
+    phiPoint[i] = xValue > probValue
+  }
+  return(sum(phiPoint)/length(u))
 }
 
 invGammaCumulative <- function(u, alpha) {
