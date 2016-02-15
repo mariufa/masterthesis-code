@@ -289,22 +289,22 @@ calcValueTau2Method2 <- function(x) {
   return(length(x)*((prod(x))^(1/length(x)))/sum(x))
 }
 
-alpha = 2
-beta = 1
+alpha = 0.1
+beta = 0.1
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 3
 alphaUpperBound = 20
-alphaLowerBound = 0.1
+alphaLowerBound = 0.05
 # Pi is used in calculation of weights
 # Options are:
 #   "constant"
 #   "betaOption"
 #   "jeffrey"
 #   
-piValue = "betOption"
+piValue = "betaOption"
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -336,7 +336,7 @@ while(sampleIndex <= NUM_SAMPLES) {
   iterationNumber = iterationNumber + 1
 }
 alphaAcceptance = (sampleIndex-1)/iterationNumber
-hist(weightsW, breaks = 200)
+hist(weightsW, breaks = 1000, xlim = c(0,0.2))
 expectedPhi = sum(phi*weightsW)/sum(weightsW)
 plot(estAlpha, weightsW)
 
