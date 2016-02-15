@@ -87,6 +87,10 @@ calcWeight <- function(u, alpha) {
 }
 
 getPiValue <- function() {
+  # get value of pi function to be used in calculation of weights.
+  # 
+  # Returns:
+  #   A scalar value.
   if (piValue == "constant") {
     return(1)
   } else if (pivalue == "jeffrey") {
