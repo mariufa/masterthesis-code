@@ -283,7 +283,7 @@ alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 3
-alphaUpperBound = 5
+alphaUpperBound = 20
 alphaLowerBound = 0.1
 
 # Generate data
@@ -312,7 +312,8 @@ while(sampleIndex <= NUM_SAMPLES) {
   print(iterationNumber)
   iterationNumber = iterationNumber + 1
 }
-hist(weightsW)
+alphaAcceptance = sampleIndex/iterationNumber
+hist(weightsW, breaks = 200)
 
 
 
