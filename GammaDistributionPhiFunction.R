@@ -81,8 +81,24 @@ calcWeight <- function(u, alpha) {
     gammaInv[i] = invGammaCumulative(u[i], alpha)
     diffGammaInv[i] = diffAlphaInvGammaCumulative(u[i], alpha)
   }
-  weight = 1/((1/length(gammaInv))*(sum(diffGammaInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv))
+  pi = getPiValue()
+  weight = pi/((1/length(gammaInv))*(sum(diffGammaInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv))
   return(weight)
+}
+
+getPiValue <- function() {
+  # get value of pi function to be used in calculation of weights.
+  # 
+  # Returns:
+  #   A scalar value.
+  if (piValue == "constant") {
+    return(1)
+  } else if (piValue == "jeffrey") {
+    # Return jeffrey prior
+    return(1)
+  } else if (piValue == "betaOption") {
+    return(estBeta)
+  }
 }
 
 calcPhi <- function(u, alpha) {
@@ -119,14 +135,9 @@ invGammaCumulative <- function(u, alpha) {
     if(method == "integrate") {
       integralv = integrate(gammaDensity, 0, x)
       integralValue = integral$valuev
-      print("hello")
     } else if(method == "pgamma") {
       integralv = pgamma(x, shape=alpha, scale=1)
       integralValue = integralv
-      if (length(integralv)>1) {
-        print(length(alpha))
-      }
-      #print(length(integralv))
     }
     
     
@@ -215,8 +226,6 @@ findAlpha <- function(s2, u) {
     }
     prevTau2Value = tau2Value
     tau2Value = calcValueTau2(u, alphaValue)
-    #print(abs(s2 - tau2Value))
-    #print(direction)
     if ((s2 > tau2Value) && (direction == -1)) {
       stepSize = stepSize/2
       direction = 1
@@ -230,7 +239,6 @@ findAlpha <- function(s2, u) {
     if(isAlphaOutsideValidInterval(alphaValue, direction)) {
       return(-1)
     }  
-    print(stepSize)
     if(it==100) {
       return(-1)
     }
@@ -281,15 +289,22 @@ calcValueTau2Method2 <- function(x) {
   return(length(x)*((prod(x))^(1/length(x)))/sum(x))
 }
 
-alpha = 2
-beta = 1
+alpha = 0.1
+beta = 0.1
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
-NUM_SAMPLES = 2000
+NUM_SAMPLES = 1000
 NUM_POINTS = 3
 alphaUpperBound = 20
-alphaLowerBound = 0.1
+alphaLowerBound = 0.05
+# Pi is used in calculation of weights
+# Options are:
+#   "constant"
+#   "betaOption"
+#   "jeffrey"
+#   
+piValue = "betaOption"
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -306,20 +321,22 @@ weightsW = rep(0, NUM_SAMPLES)
 sampleIndex = 1
 iterationNumber = 0
 estAlpha = rep(0, NUM_SAMPLES)
+estBeta = 0
 while(sampleIndex <= NUM_SAMPLES) {
   u = runif(NUM_POINTS)
   estAlpha[sampleIndex] = optimfindAlpha()
   if(estAlpha[sampleIndex] != -1) {
+    estBeta = findBeta(s1, u, estAlpha[sampleIndex])
     weightsW[sampleIndex] = calcWeight(u, estAlpha[sampleIndex])
     phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
     sampleIndex = sampleIndex + 1
-    #print(sampleIndex)
+    print(sampleIndex)
   }
   #print(iterationNumber)
   iterationNumber = iterationNumber + 1
 }
-alphaAcceptance = sampleIndex/iterationNumber
-hist(weightsW, breaks = 200)
+alphaAcceptance = (sampleIndex-1)/iterationNumber
+hist(weightsW, breaks = 1000, xlim = c(0,0.2))
 expectedPhi = sum(phi*weightsW)/sum(weightsW)
 plot(estAlpha, weightsW)
 
