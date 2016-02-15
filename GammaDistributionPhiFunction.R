@@ -93,7 +93,7 @@ getPiValue <- function() {
   #   A scalar value.
   if (piValue == "constant") {
     return(1)
-  } else if (pivalue == "jeffrey") {
+  } else if (piValue == "jeffrey") {
     # Return jeffrey prior
     return(1)
   } else if (piValue == "betaOption") {
@@ -304,7 +304,7 @@ alphaLowerBound = 0.1
 #   "betaOption"
 #   "jeffrey"
 #   
-piValue = "constant"
+piValue = "betOption"
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -335,7 +335,7 @@ while(sampleIndex <= NUM_SAMPLES) {
   #print(iterationNumber)
   iterationNumber = iterationNumber + 1
 }
-alphaAcceptance = sampleIndex/iterationNumber
+alphaAcceptance = (sampleIndex-1)/iterationNumber
 hist(weightsW, breaks = 200)
 expectedPhi = sum(phi*weightsW)/sum(weightsW)
 plot(estAlpha, weightsW)
