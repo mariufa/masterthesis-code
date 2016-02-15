@@ -81,8 +81,18 @@ calcWeight <- function(u, alpha) {
     gammaInv[i] = invGammaCumulative(u[i], alpha)
     diffGammaInv[i] = diffAlphaInvGammaCumulative(u[i], alpha)
   }
-  weight = 1/((1/length(gammaInv))*(sum(diffGammaInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv))
+  pi = 1
+  weight = pi/((1/length(gammaInv))*(sum(diffGammaInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv))
   return(weight)
+}
+
+getPiValue <- function() {
+  if (piValue == "constant") {
+    return(1)
+  } else if (pivalue == "jeffrey") {
+    # Return jeffrey prior
+    return(1)
+  }
 }
 
 calcPhi <- function(u, alpha) {
@@ -290,6 +300,12 @@ NUM_SAMPLES = 2000
 NUM_POINTS = 3
 alphaUpperBound = 20
 alphaLowerBound = 0.1
+# Pi is used in calculation of weights
+# Options are:
+#   "constant"
+#   "jeffrey"
+#   
+piValue = "constant"
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
