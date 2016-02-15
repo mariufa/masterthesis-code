@@ -135,14 +135,9 @@ invGammaCumulative <- function(u, alpha) {
     if(method == "integrate") {
       integralv = integrate(gammaDensity, 0, x)
       integralValue = integral$valuev
-      print("hello")
     } else if(method == "pgamma") {
       integralv = pgamma(x, shape=alpha, scale=1)
       integralValue = integralv
-      if (length(integralv)>1) {
-        print(length(alpha))
-      }
-      #print(length(integralv))
     }
     
     
@@ -231,8 +226,6 @@ findAlpha <- function(s2, u) {
     }
     prevTau2Value = tau2Value
     tau2Value = calcValueTau2(u, alphaValue)
-    #print(abs(s2 - tau2Value))
-    #print(direction)
     if ((s2 > tau2Value) && (direction == -1)) {
       stepSize = stepSize/2
       direction = 1
@@ -246,7 +239,6 @@ findAlpha <- function(s2, u) {
     if(isAlphaOutsideValidInterval(alphaValue, direction)) {
       return(-1)
     }  
-    print(stepSize)
     if(it==100) {
       return(-1)
     }
@@ -302,7 +294,7 @@ beta = 1
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
-NUM_SAMPLES = 2000
+NUM_SAMPLES = 1000
 NUM_POINTS = 3
 alphaUpperBound = 20
 alphaLowerBound = 0.1
@@ -334,11 +326,11 @@ while(sampleIndex <= NUM_SAMPLES) {
   u = runif(NUM_POINTS)
   estAlpha[sampleIndex] = optimfindAlpha()
   if(estAlpha[sampleIndex] != -1) {
-    estBeta = findBeta(s1, u, estAlpha)
+    estBeta = findBeta(s1, u, estAlpha[sampleIndex])
     weightsW[sampleIndex] = calcWeight(u, estAlpha[sampleIndex])
     phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
     sampleIndex = sampleIndex + 1
-    #print(sampleIndex)
+    print(sampleIndex)
   }
   #print(iterationNumber)
   iterationNumber = iterationNumber + 1
