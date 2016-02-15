@@ -81,7 +81,7 @@ calcWeight <- function(u, alpha) {
     gammaInv[i] = invGammaCumulative(u[i], alpha)
     diffGammaInv[i] = diffAlphaInvGammaCumulative(u[i], alpha)
   }
-  pi = 1
+  pi = getPiValue()
   weight = pi/((1/length(gammaInv))*(sum(diffGammaInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv))
   return(weight)
 }
