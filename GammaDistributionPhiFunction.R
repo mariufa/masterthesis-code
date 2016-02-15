@@ -96,6 +96,8 @@ getPiValue <- function() {
   } else if (pivalue == "jeffrey") {
     # Return jeffrey prior
     return(1)
+  } else if (piValue == "betaOption") {
+    return(estBeta)
   }
 }
 
@@ -307,6 +309,7 @@ alphaLowerBound = 0.1
 # Pi is used in calculation of weights
 # Options are:
 #   "constant"
+#   "betaOption"
 #   "jeffrey"
 #   
 piValue = "constant"
