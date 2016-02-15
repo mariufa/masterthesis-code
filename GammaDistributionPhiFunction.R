@@ -284,7 +284,7 @@ method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 3
 alphaUpperBound = 20
-alphaLowerBound = 0.1
+alphaLowerBound = 0.01
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -296,24 +296,26 @@ s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
 # Generation of samples
 phi = rep(0, NUM_SAMPLES)
 # Phi is the prob that X>probValue
-probValue = 0.8
+probValue = 1
 weightsW = rep(0, NUM_SAMPLES)
 sampleIndex = 1
 iterationNumber = 0
+estAlpha = rep(0, NUM_SAMPLES)
 while(sampleIndex <= NUM_SAMPLES) {
   u = runif(NUM_POINTS)
-  estAlpha = optimfindAlpha()
-  if(estAlpha != -1) {
+  estAlpha[sampleIndex] = optimfindAlpha()
+  if(estAlpha[sampleIndex] != -1) {
     weightsW[sampleIndex] = calcWeight(u, estAlpha)
     phi[sampleIndex] = calcPhi(u, alpha)
     sampleIndex = sampleIndex + 1
     #print(sampleIndex)
   }
-  print(iterationNumber)
+  #print(iterationNumber)
   iterationNumber = iterationNumber + 1
 }
 alphaAcceptance = sampleIndex/iterationNumber
 hist(weightsW, breaks = 200)
-
+expectedPhi = sum(phi*weightsW)/sum(weightsW)
+plot(estAlpha, weightsW)
 
 
