@@ -117,11 +117,16 @@ invGammaCumulative <- function(u, alpha) {
     }
     
     if(method == "integrate") {
-      integral = integrate(gammaDensity, 0, x)
-      integralValue = integral$value  
+      integralv = integrate(gammaDensity, 0, x)
+      integralValue = integral$valuev
+      print("hello")
     } else if(method == "pgamma") {
-      integral = pgamma(x, shape=alpha, scale=1)
-      integralValue = integral
+      integralv = pgamma(x, shape=alpha, scale=1)
+      integralValue = integralv
+      if (length(integralv)>1) {
+        print(length(alpha))
+      }
+      #print(length(integralv))
     }
     
     
@@ -281,10 +286,10 @@ beta = 1
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
-NUM_SAMPLES = 1000
+NUM_SAMPLES = 2000
 NUM_POINTS = 3
 alphaUpperBound = 20
-alphaLowerBound = 0.01
+alphaLowerBound = 0.1
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -305,8 +310,8 @@ while(sampleIndex <= NUM_SAMPLES) {
   u = runif(NUM_POINTS)
   estAlpha[sampleIndex] = optimfindAlpha()
   if(estAlpha[sampleIndex] != -1) {
-    weightsW[sampleIndex] = calcWeight(u, estAlpha)
-    phi[sampleIndex] = calcPhi(u, alpha)
+    weightsW[sampleIndex] = calcWeight(u, estAlpha[sampleIndex])
+    phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
     sampleIndex = sampleIndex + 1
     #print(sampleIndex)
   }
