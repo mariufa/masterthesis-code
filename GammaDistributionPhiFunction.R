@@ -291,12 +291,12 @@ calcValueTau2Method2 <- function(x) {
   return(length(x)*((prod(x))^(1/length(x)))/sum(x))
 }
 
-alpha = 0.1
-beta = 0.1
+alpha = 2
+beta = 2
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
-NUM_SAMPLES = 1000
+NUM_SAMPLES = 10000
 NUM_POINTS = 3
 alphaUpperBound = 20
 alphaLowerBound = 0.05
@@ -306,7 +306,7 @@ alphaLowerBound = 0.05
 #   "betaOption"
 #   "jeffrey"
 #   "alphaOption"
-piValue = "betaOption"
+piValue = "constant"
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
@@ -329,7 +329,7 @@ while(sampleIndex <= NUM_SAMPLES) {
   estAlpha[sampleIndex] = optimfindAlpha()
   if(estAlpha[sampleIndex] != -1) {
     estBeta = findBeta(s1, u, estAlpha[sampleIndex])
-    weightsW[sampleIndex] = calcWeight(u, estAlpha[sampleIndex])
+    weightsW[sampleIndex] = abs(calcWeight(u, estAlpha[sampleIndex]))
     phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
     sampleIndex = sampleIndex + 1
     print(sampleIndex)
@@ -338,8 +338,9 @@ while(sampleIndex <= NUM_SAMPLES) {
   iterationNumber = iterationNumber + 1
 }
 alphaAcceptance = (sampleIndex-1)/iterationNumber
-hist(weightsW, breaks = 1000, xlim = c(0,0.2))
+hist(weightsW, breaks = 300)
 expectedPhi = sum(phi*weightsW)/sum(weightsW)
 plot(estAlpha, weightsW)
+unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 
