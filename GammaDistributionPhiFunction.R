@@ -98,6 +98,8 @@ getPiValue <- function() {
     return(1)
   } else if (piValue == "betaOption") {
     return(estBeta)
+  } else if (piValue == "alphaOption") {
+    return(estAlpha[sampleIndex])
   }
 }
 
@@ -303,7 +305,7 @@ alphaLowerBound = 0.05
 #   "constant"
 #   "betaOption"
 #   "jeffrey"
-#   
+#   "alphaOption"
 piValue = "betaOption"
 
 # Generate data
