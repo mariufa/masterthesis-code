@@ -268,7 +268,7 @@ hist(gammaData)
 # Calculation of statistics
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
-# w statistic obs
+# w statistic obs. Not to be used yet.
 wObs = calcPhiGivenX(gammaData)
 
 # Generation of samples
@@ -287,8 +287,10 @@ while(sampleIndex <= NUM_SAMPLES) {
     estBeta = findBeta(s1, u, estAlpha[sampleIndex])
     weightsW[sampleIndex] = abs(calcWeight(u, estAlpha[sampleIndex]))
     phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
+    
     sampleIndex = sampleIndex + 1
     print(sampleIndex)
+    
   }
   #print(iterationNumber)
   iterationNumber = iterationNumber + 1
