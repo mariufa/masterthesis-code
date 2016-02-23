@@ -260,7 +260,7 @@ alphaLowerBound = 0.05
 #   "betaOption"
 #   "jeffrey"
 #   "alphaOption"
-piValue = "constant"
+piValue = "jeffrey"
 
 # Generate data
 gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
