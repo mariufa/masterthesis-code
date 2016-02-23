@@ -42,7 +42,7 @@ calcPhi <- function(u, alpha) {
   phiPoint = rep(0, length(u))
   for(i in 1:length(u)) {
     xValue = invGammaCumulative(u[i], alpha)
-    phiPoint[i] = xValue > probValue
+    phiPoint[i] = getPhiValue(xValue)
   }
   return(sum(phiPoint)/length(u))
 }
