@@ -269,7 +269,7 @@ hist(gammaData)
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
 # w statistic obs
-#wObs = 
+wObs = calcPhiGivenX(gammaData)
 
 # Generation of samples
 phi = rep(0, NUM_SAMPLES)
