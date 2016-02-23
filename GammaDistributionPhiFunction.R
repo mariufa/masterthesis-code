@@ -54,8 +54,12 @@ calcPhiGivenX <- function(x) {
   #   x: A vector of data.
   #   
   # Returns:
-  #  A scalar
-  
+  #  A scalar.
+  phiPoint = rep(0, length(x))
+  for(i in 1:length(x)) {
+    phiPoint[i] = getPhiValue(x[i])
+  }
+  return(sum(phiPoint)/length(phiPoint))
 }
 
 getPhiValue <- function(xValue) {
