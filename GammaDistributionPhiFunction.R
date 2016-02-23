@@ -48,6 +48,13 @@ calcPhi <- function(u, alpha) {
 }
 
 calcPhiGivenX <- function(x) {
+  # Calc phi value for a vector x.
+  # 
+  # Args:
+  #   x: A vector of data.
+  #   
+  # Returns:
+  #  A scalar
   
 }
 
