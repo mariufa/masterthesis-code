@@ -1,70 +1,5 @@
 library(MCMCpack)
 
-#weightedUniform <- function(n, numIterations) {
-#  # Generate sample of from a weighted uniform distribution
-#  # 
-#  # Args:
-#  #   n: number of points in sample
-#  #   
-#  # Returns:
-#  #   A vector sample
-#  uCurr = runif(n)
-#  alphaCurr = findAlpha(s2, uCurr)
-#  uConv = rep(0, numIterations)
-#  uTrace = rep(0, numIterations)
-#  for(i in 1:numIterations) {
-#    uProp = runif(n)
-#    alphaProp = findAlpha(s2, uProp)
-#    if(alphaProp != -1) {
-#      proportionalProp = proportionalDensity(uProp, alphaProp)
-#      proportionalCurr = proportionalDensity(uCurr, alphaCurr)
-#      alphaVal = min(1, proportionalProp/proportionalCurr)
-#      u = runif(1)
-#      print(i)
-#      if (u <= alphaVal) {
-#        uCurr = uProp
-#        alphaCurr = alphaProp
-#      }  
-#    }
-#    uConv[i] = var(uCurr)
-#    uTrace[i] = uCurr[1]
-#  }
-#  plot(uConv, type="l")
-#  plot(uTrace, type="l")
-#  return(uCurr)
-#}
-#
-#proportionalDensity <- function(u, alpha) {
-#  # Calculate proportional density for indepence sampling
-#  # 
-#  # Args:
-#  #   u: A vector from an uniform distribution.
-#  #   alpha: A scalar value
-#  #   
-#  # Returns:
-#  #   A scalar value
-#  
-#  gammaInv = rep(0, length(u))
-#  diffGammaInv = rep(0, length(u))
-#  for(i in 1:length(u)) {
-#    gammaInv[i] = invGammaCumulative(u[i], alpha)
-#    diffGammaInv[i] = diffAlphaInvGammaCumulative(u[i], alpha)
-#  }
-#  return(calcWeight(gammaInv, diffGammaInv))
-#}
-#
-#calcWeight <- function(gammaInv, diffGammaInv) {
-#  # Calculate weigth for a gamma distribution
-#  #
-#  # Args:
-#  #   gammaInv: A list of values from the inverse cumulative gamma.
-#  #   diffGammaInv: A list of values from the derivative of the inverse cumulative gamma.
-#  #   
-#  # Returns:
-#  #   A scalar value
-#  weight = (1/length(gammaInv))*(sum(diffGammaInv/gammaInv)) - sum(diffGammaInv)/sum(gammaInv)
-#  return(weight)
-#}
 
 calcWeight <- function(u, alpha) {
   # Calculates weight for given u and alpha.
@@ -314,6 +249,8 @@ hist(gammaData)
 # Calculation of statistics
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
+# w statistic obs
+wObs = 
 
 # Generation of samples
 phi = rep(0, NUM_SAMPLES)
