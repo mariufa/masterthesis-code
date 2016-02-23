@@ -47,6 +47,14 @@ calcPhi <- function(u, alpha) {
   return(sum(phiPoint)/length(u))
 }
 
+calcPhiGivenX <- function(x) {
+  
+}
+
+getPhiValue <- function(xValue) {
+  return(xValue > probValue)
+}
+
 invGammaCumulative <- function(u, alpha) {
   # Finds the inverse of the cumulative gamma.
   # 
@@ -250,7 +258,7 @@ hist(gammaData)
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
 # w statistic obs
-wObs = 
+#wObs = 
 
 # Generation of samples
 phi = rep(0, NUM_SAMPLES)
