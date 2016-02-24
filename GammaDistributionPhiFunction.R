@@ -268,7 +268,7 @@ gibbsSampling <- function(xInit) {
 }
 
 isValidX1Proposal <- function(x1, sumX, prodX) {
-  return((x1^3 - 2*sumX*x1^2 + (sumx^2)*x1 - 4*prodX) > 0)
+  return((x1^3 - 2*sumX*x1^2 + (sumX^2)*x1 - 4*prodX) > 0)
 }
 
 findRoots <- function (x1, sumX, prodX) {
@@ -338,5 +338,8 @@ hist(weightsW, breaks = 300)
 expectedPhi = sum(phi*weightsW)/sum(weightsW)
 plot(estAlpha, weightsW)
 unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
+
+# Gibbs sampling
+xSample = gibbsSampling(gammaData)
 
 
