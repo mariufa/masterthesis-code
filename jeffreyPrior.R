@@ -1,6 +1,6 @@
 
 jeffreyPrior <- function(x) {
-  return( sqrt( (1/(x^2)) + (1/(2 - (exp(x) - exp(-x)))) ) )
+  return( sqrt( (1/(x^2)) + (1/(2 - (exp(x) + exp(-x)))) ) )
 }
 
 partOfJeffreyPrior <-function(x) {

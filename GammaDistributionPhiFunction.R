@@ -30,7 +30,7 @@ getPiValue <- function() {
     return(1)
   } else if (piValue == "jeffrey") {
     # Return jeffrey prior
-    return(sqrt((1/(estAlpha[sampleIndex]^2)) + (1/(2-(exp(estAlpha[sampleIndex]) - exp(-estAlpha[sampleIndex]))))))
+    return(sqrt((1/(estAlpha[sampleIndex]^2)) + (1/(2-(exp(estAlpha[sampleIndex]) + exp(-estAlpha[sampleIndex]))))))
   } else if (piValue == "betaOption") {
     return(estBeta)
   } else if (piValue == "alphaOption") {
