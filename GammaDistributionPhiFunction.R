@@ -245,6 +245,10 @@ calcValueTau2Method2 <- function(x) {
   return(length(x)*((prod(x))^(1/length(x)))/sum(x))
 }
 
+gibbsSampling <- function(xInit) {
+  
+}
+
 alpha = 2
 beta = 2
 hStep = 0.01
