@@ -246,7 +246,41 @@ calcValueTau2Method2 <- function(x) {
 }
 
 gibbsSampling <- function(xInit) {
-  
+  sumX = sum(xInit)
+  prodX = prod(xInit)
+  NUM_ITERATIONS = 5000
+  xCurrent = xInit
+  for(i in 1:NUM_ITERATIONS) {
+    x1 = runif(1)*sumX
+    if(isValidX1Proposal(x1, sumX, prodX)) {
+      roots = findRoots(x1, sumX, prodX)
+      x2 = roots[1]
+      x3 = roots[2]
+      xProposal = c(x1, x2, x3)
+      alphaMetHastings = findAlphaMetHastings(xCurrent, xProposal)
+      acceptProb = runif(1)
+      if(acceptProb <= alphaMetHastings) {
+        xCurrent = xProposal
+      }
+    }
+  }
+  return(xCurrent)
+}
+
+isValidX1Proposal <- function(x1, sumX, prodX) {
+  return((x1^3 - 2*sumX*x1^2 + (sumx^2)*x1 - 4*prodX) > 0)
+}
+
+findRoots <- function (x1, sumX, prodX) {
+  root1 = ((sumX - x1) + sqrt( (sumX - x1)^2 - 4*prodX/x1 ))/2
+  root2 = ((sumX - x1) - sqrt( (sumX - x1)^2 - 4*prodX/x1 ))/2
+  return(c(root1, root2))
+}
+
+findAlphaMetHastings <- function(xCurrent, xProposal) {
+  piProp = 1/(xProposal[1]*sqrt((sum(xProposal)  - xProposal[1])^2 - 4*prod(xProposal)/xProposal[1] ))
+  piCurrent = 1/(xCurrent[1]*sqrt((sum(xCurrent)  - xCurrent[1])^2 - 4*prod(xCurrent)/xCurrent[1] ))
+  return(min(1, piProp/piCurrent))
 }
 
 alpha = 2
