@@ -288,7 +288,7 @@ beta = 2
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
-NUM_SAMPLES = 10000
+NUM_SAMPLES = 1000
 NUM_POINTS = 3
 alphaUpperBound = 20
 alphaLowerBound = 0.05
@@ -312,7 +312,7 @@ wObs = calcPhiGivenX(gammaData)
 # Generation of samples
 phi = rep(0, NUM_SAMPLES)
 # Phi is the prob that X>probValue
-probValue = 1
+probValue = 2
 weightsW = rep(0, NUM_SAMPLES)
 sampleIndex = 1
 iterationNumber = 0
@@ -340,6 +340,19 @@ plot(estAlpha, weightsW)
 unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-xSample = gibbsSampling(gammaData)
+NUM_GIBBS_SAMPLES = 1000
+xSample = gammaData
+phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
+gibbsObslargerWObs = 0
+for(i in 1:NUM_GIBBS_SAMPLES) {
+  xSample = gibbsSampling(xSample)
+  phiGibbs[i] = calcPhiGivenX(xSample)
+  if(phiGibbs[i] >= wObs) {
+    gibbsObslargerWObs = gibbsObslargerWObs + 1
+  }
+  print(i)
+}
+gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
+averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
 
 
