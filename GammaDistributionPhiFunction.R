@@ -39,12 +39,11 @@ getPiValue <- function() {
 }
 
 calcPhi <- function(u, alpha) {
-  phiPoint = rep(0, length(u))
+  xValue = rep(0, length(u))
   for(i in 1:length(u)) {
-    xValue = invGammaCumulative(u[i], alpha)
-    phiPoint[i] = getPhiValue(xValue)
+    xValue[i] = invGammaCumulative(u[i], alpha)
   }
-  return(sum(phiPoint)/length(u))
+  return(calcPhiGivenX(xValue))
 }
 
 calcPhiGivenX <- function(x) {
@@ -55,12 +54,17 @@ calcPhiGivenX <- function(x) {
   #   
   # Returns:
   #  A scalar.
-  phiPoint = rep(0, length(x))
-  for(i in 1:length(x)) {
-    phiPoint[i] = getPhiValue(x[i])
-  }
-  return(sum(phiPoint)/length(phiPoint))
+  
+  if(phiOption == "probValueOption") {
+    phiPoint = rep(0, length(x))
+    for(i in 1:length(x)) {
+      phiPoint[i] = getPhiValue(x[i])
+    }
+    return(sum(phiPoint)/length(phiPoint))  
+  } 
+  return(-1)
 }
+
 
 getPhiValue <- function(xValue) {
   return(xValue > probValue)
@@ -311,8 +315,14 @@ wObs = calcPhiGivenX(gammaData)
 
 # Generation of samples
 phi = rep(0, NUM_SAMPLES)
+# Phi options:
+# x larger than a: "probValueOption2
+# x1 times x2 div x3: "x1x2divX4Option"
+phiOption = "probValueOption"
 # Phi is the prob that X>probValue
 probValue = 2
+
+
 weightsW = rep(0, NUM_SAMPLES)
 sampleIndex = 1
 iterationNumber = 0
