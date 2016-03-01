@@ -61,12 +61,23 @@ calcPhiGivenX <- function(x) {
       phiPoint[i] = getPhiValue(x[i])
     }
     return(sum(phiPoint)/length(phiPoint))  
-  } 
+  } else if(phiOption == "x1x2divX4Option") {
+    return(x[1]*x[2]/x[3])
+  } else if(phiOption == "x1divx2powx3Option") {
+    return((x[1]/x[2])^x[3])
+  }
   return(-1)
 }
 
 
 getPhiValue <- function(xValue) {
+  # Calculates phi for an element of an x vector.
+  # 
+  # Args:
+  #   xValue: A scalar value.
+  #   
+  # Returns:
+  #   
   return(xValue > probValue)
 }
 
@@ -287,12 +298,29 @@ findAlphaMetHastings <- function(xCurrent, xProposal) {
   return(min(1, piProp/piCurrent))
 }
 
+
+cramerVonMisesValueTest <- function(x) {
+  # Calculates the value for a Cramer-von Mises test.
+  # 
+  # Args:
+  #   x: A vector sample.
+  #   
+  # Returns:
+  #   A scalar value.
+  cramerSum = 0
+  for(i in 1:length(x)) {
+    cramerSum = cramerSum + ((2*i - 1)/(2*length(x)) - pgamma(x[i], shape=alpha, scale=beta))^2
+  }
+  cramer = 12/(length(x)) + cramerSum
+  return(cramer)
+}
+
 alpha = 2
 beta = 2
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
-NUM_SAMPLES = 1000
+NUM_SAMPLES = 10000
 NUM_POINTS = 3
 alphaUpperBound = 20
 alphaLowerBound = 0.05
@@ -304,24 +332,41 @@ alphaLowerBound = 0.05
 #   "alphaOption"
 piValue = "jeffrey"
 
+phi = rep(0, NUM_SAMPLES)
+# Phi options:
+# x larger than a: "probValueOption"
+# x1 times x2 div x3: "x1x2divX4Option"
+# x1 div x2 pow x3: "x1divx2powx3Option"
+phiOption = "probValueOption"
+# Phi is the prob that X>probValue
+probValue = 3
+
+# Data generation options:
+# pgamma generated: "pgamma"
+# Bo data: "bo"
+dataGenOption = "bo"
+
+
+
 # Generate data
-gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
+gammaData = 0
+if(dataGenOption == "pgamma") {
+  gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)  
+} else if(dataGenOption == "bo") {
+  NUM_POINTS = 6
+  alphaUpperBound = 1.2
+  alphaLowerBound = 0.8
+  gammaData = c(4.399, 1.307, 0.085, 0.7910, 0.2345, 0.1915)
+}
 hist(gammaData)
 # Calculation of statistics
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
 # w statistic obs. Not to be used yet.
 wObs = calcPhiGivenX(gammaData)
+cramerObs = cramerVonMisesValueTest(gammaData)
 
 # Generation of samples
-phi = rep(0, NUM_SAMPLES)
-# Phi options:
-# x larger than a: "probValueOption2
-# x1 times x2 div x3: "x1x2divX4Option"
-phiOption = "probValueOption"
-# Phi is the prob that X>probValue
-probValue = 2
-
 
 weightsW = rep(0, NUM_SAMPLES)
 sampleIndex = 1
@@ -354,15 +399,21 @@ NUM_GIBBS_SAMPLES = 1000
 xSample = gammaData
 phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
 gibbsObslargerWObs = 0
+cramerNum = 0
 for(i in 1:NUM_GIBBS_SAMPLES) {
   xSample = gibbsSampling(xSample)
   phiGibbs[i] = calcPhiGivenX(xSample)
   if(phiGibbs[i] >= wObs) {
     gibbsObslargerWObs = gibbsObslargerWObs + 1
   }
+  cramerStat = cramerVonMisesValueTest(xSample)
+  if(cramerStat >= cramerObs) {
+    cramerNum = cramerNum + 1
+  }
   print(i)
 }
 gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
 averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
-
+# P-values
+cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
