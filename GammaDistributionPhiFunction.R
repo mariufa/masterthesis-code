@@ -320,9 +320,9 @@ beta = 2
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
-NUM_SAMPLES = 10000
+NUM_SAMPLES = 1000
 NUM_POINTS = 3
-alphaUpperBound = 20
+alphaUpperBound = 200
 alphaLowerBound = 0.05
 # Pi is used in calculation of weights
 # Options are:
@@ -337,14 +337,14 @@ phi = rep(0, NUM_SAMPLES)
 # x larger than a: "probValueOption"
 # x1 times x2 div x3: "x1x2divX4Option"
 # x1 div x2 pow x3: "x1divx2powx3Option"
-phiOption = "probValueOption"
+phiOption = "x1x2divX4Option"
 # Phi is the prob that X>probValue
 probValue = 3
 
 # Data generation options:
 # pgamma generated: "pgamma"
 # Bo data: "bo"
-dataGenOption = "bo"
+dataGenOption = "pgamma"
 
 
 
@@ -378,11 +378,14 @@ while(sampleIndex <= NUM_SAMPLES) {
   estAlpha[sampleIndex] = optimfindAlpha()
   if(estAlpha[sampleIndex] != -1) {
     estBeta = findBeta(s1, u, estAlpha[sampleIndex])
-    weightsW[sampleIndex] = abs(calcWeight(u, estAlpha[sampleIndex]))
-    phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
-    
-    sampleIndex = sampleIndex + 1
-    print(sampleIndex)
+    if(estBeta > alphaLowerBound && estBeta < alphaUpperBound) {
+        
+      weightsW[sampleIndex] = abs(calcWeight(u, estAlpha[sampleIndex]))
+      phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
+      
+      sampleIndex = sampleIndex + 1
+      print(sampleIndex)
+    }
     
   }
   #print(iterationNumber)
