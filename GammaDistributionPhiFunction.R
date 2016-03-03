@@ -165,9 +165,6 @@ optimfindAlpha <- function() {
     return(-1)
   }
   solution = optim(c(0.1), optimFunction, lower=alphaLowerBound, upper=alphaUpperBound, method="Brent")
-  if (solution$value > 0.00001) {
-    print(solution$value)
-  }
   return(solution$par)
 }
 
@@ -303,7 +300,7 @@ findAlphaMetHastings <- function(xCurrent, xProposal) {
 }
 
 
-cramerVonMisesValueTest <- function(x) {
+cramerVonMisesValueTest <- function(x, alpha, beta) {
   # Calculates the value for a Cramer-von Mises test.
   # 
   # Args:
@@ -319,13 +316,33 @@ cramerVonMisesValueTest <- function(x) {
   return(cramer)
 }
 
-alpha = 2
-beta = 2
+findGammaMLE <- function(x){
+  solution = optim(c(1,1), negativeLogLikelihoodGamma, x=x)
+  return(solution$par)
+}
+
+negativeLogLikelihoodGamma <- function(par, x) {
+  # Calculates the negative log-likelihood for a gamma distribution.
+  # 
+  # Args:
+  #   par: A vector of size 2. First element is alpha and second element is beta.
+  #   x: Data to calculate log-likelihood from. A vector.
+  #   
+  # Returns:
+  #  The log-likelihood value. A scalar
+  alpha = par[1]
+  beta = par[2]
+  logLikelihood = -((alpha - 1)*sum(log(x)) - (1/beta)*sum(x) - length(x)*log(gamma(alpha)) - alpha*length(x)*log(beta))
+  return(logLikelihood)
+}
+
+alpha = 1
+beta = 1
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
-NUM_POINTS = 3
+NUM_POINTS = 30
 alphaUpperBound = 200
 alphaLowerBound = 0.05
 # Pi is used in calculation of weights
@@ -341,9 +358,9 @@ phi = rep(0, NUM_SAMPLES)
 # x larger than a: "probValueOption"
 # x1 times x2 div x3: "x1x2divX4Option"
 # x1 div x2 pow x3: "x1divx2powx3Option"
-phiOption = "x1x2divX4Option"
+phiOption = "probValueOption"
 # Phi is the prob that X>probValue
-probValue = 3
+probValue = 1
 
 # Data generation options:
 # pgamma generated: "pgamma"
@@ -366,9 +383,15 @@ hist(gammaData)
 # Calculation of statistics
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
+# Log-likelihood
+negativeloglikihood = negativeLogLikelihoodGamma(c(alpha, beta), gammaData)
+mleEstimators = findGammaMLE(gammaData)
+mleAlpha = mleEstimators[1]
+mleBeta = mleEstimators[2]
+maxLogLikelihood = - negativeLogLikelihoodGamma(c(mleAlpha, mleBeta), gammaData)
 # w statistic obs. Not to be used yet.
 wObs = calcPhiGivenX(gammaData)
-cramerObs = cramerVonMisesValueTest(gammaData)
+cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 
 # Generation of samples
 
@@ -388,7 +411,7 @@ while(sampleIndex <= NUM_SAMPLES) {
       phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
       
       sampleIndex = sampleIndex + 1
-      #print(sampleIndex)
+      print(sampleIndex)
     }
     
   }
@@ -413,7 +436,8 @@ for(i in 1:NUM_GIBBS_SAMPLES) {
   if(phiGibbs[i] >= wObs) {
     gibbsObslargerWObs = gibbsObslargerWObs + 1
   }
-  cramerStat = cramerVonMisesValueTest(xSample)
+  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
+  #print(cramerStat)
   if(cramerStat >= cramerObs) {
     cramerNum = cramerNum + 1
   }
@@ -423,4 +447,5 @@ gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
 averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
 # P-values
 cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
+
 
