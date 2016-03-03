@@ -62,7 +62,7 @@ calcPhiGivenX <- function(x) {
     }
     return(sum(phiPoint)/length(phiPoint))  
   } else if(phiOption == "x1x2divX4Option") {
-    return(x[1]*x[2]/x[3])
+    return(getPhiValue(x[1]*x[2]/x[3]))
   } else if(phiOption == "x1divx2powx3Option") {
     return((x[1]/x[2])^x[3])
   }
@@ -164,7 +164,11 @@ optimfindAlpha <- function() {
   if((calcValueTau2(u, alphaUpperBound) < s2) || (calcValueTau2(u, alphaLowerBound) > s2)) {
     return(-1)
   }
-  return(optim(c(0.1), optimFunction, lower=alphaLowerBound, upper=alphaUpperBound, method="Brent")$par)
+  solution = optim(c(0.1), optimFunction, lower=alphaLowerBound, upper=alphaUpperBound, method="Brent")
+  if (solution$value > 0.00001) {
+    print(solution$value)
+  }
+  return(solution$par)
 }
 
 optimFunction <- function(alpha) {
@@ -384,7 +388,7 @@ while(sampleIndex <= NUM_SAMPLES) {
       phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
       
       sampleIndex = sampleIndex + 1
-      print(sampleIndex)
+      #print(sampleIndex)
     }
     
   }
