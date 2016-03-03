@@ -262,18 +262,25 @@ calcValueTau2Method2 <- function(x) {
 }
 
 gibbsSampling <- function(xInit) {
-  sumX = sum(xInit)
-  prodX = prod(xInit)
   NUM_ITERATIONS = 5000
   xCurrent = xInit
   for(i in 1:NUM_ITERATIONS) {
+    randomXpos = sample(length(xCurrent), size=3)
+    sumX = xCurrent[randomXpos[1]] + xCurrent[randomXpos[2]] + xCurrent[randomXpos[3]]
+    prodX = xCurrent[randomXpos[1]]*xCurrent[randomXpos[2]]*xCurrent[randomXpos[3]]
     x1 = runif(1)*sumX
     if(isValidX1Proposal(x1, sumX, prodX)) {
       roots = findRoots(x1, sumX, prodX)
       x2 = roots[1]
       x3 = roots[2]
-      xProposal = c(x1, x2, x3)
-      alphaMetHastings = findAlphaMetHastings(xCurrent, xProposal)
+      if(is.nan(x2) || is.nan(x3)){
+        print((x1^3 - 2*sumX*x1^2 + (sumX^2)*x1 - 4*prodX))
+      }
+      xProposal = xCurrent
+      xProposal[randomXpos[1]] = x1
+      xProposal[randomXpos[2]] = x2
+      xProposal[randomXpos[3]] = x3
+      alphaMetHastings = findAlphaMetHastings(c(xCurrent[randomXpos[1]], xCurrent[randomXpos[2]], xCurrent[randomXpos[3]]), c(xProposal[randomXpos[1]], xProposal[randomXpos[2]], xProposal[randomXpos[3]]))
       acceptProb = runif(1)
       if(acceptProb <= alphaMetHastings) {
         xCurrent = xProposal
@@ -342,7 +349,7 @@ hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
-NUM_POINTS = 30
+NUM_POINTS = 10
 alphaUpperBound = 200
 alphaLowerBound = 0.05
 # Pi is used in calculation of weights
