@@ -307,6 +307,50 @@ findAlphaMetHastings <- function(xCurrent, xProposal) {
 }
 
 
+GammaGibbsSampling <- function(xInit) {
+  # A Gibbs sampling for a Gamma distribution
+  # 
+  # Args:
+  #   xInit: Initial sample. A vector.
+  #   
+  # Return:
+  #   A sample from a Gamma distribution. A vector.
+  NUM_ITERATIONS = 5000
+  xCurrent = xInit
+  for(i in 1:NUM_ITERATIONS) {
+    randomXpos = sample(length(xCurrent), size=3)
+    sumX = xCurrent[randomXpos[1]] + xCurrent[randomXpos[2]] + xCurrent[randomXpos[3]]
+    prodX = xCurrent[randomXpos[1]]*xCurrent[randomXpos[2]]*xCurrent[randomXpos[3]]
+    x1 = runif(1)*sumX
+    if(isValidX1Proposal(x1, sumX, prodX)) {
+      roots = findRoots(x1, sumX, prodX)
+      x2 = roots[1]
+      x3 = roots[2]
+      if(is.nan(x2) || is.nan(x3)){
+        print((x1^3 - 2*sumX*x1^2 + (sumX^2)*x1 - 4*prodX))
+      }
+      xProposal = xCurrent
+      xProposal[randomXpos[1]] = x1
+      xProposal[randomXpos[2]] = x2
+      xProposal[randomXpos[3]] = x3
+      alphaMetHastings = findGammaAlphaMetHastings(c(xCurrent[randomXpos[1]], xCurrent[randomXpos[2]], xCurrent[randomXpos[3]]), c(xProposal[randomXpos[1]], xProposal[randomXpos[2]], xProposal[randomXpos[3]]))
+      acceptProb = runif(1)
+      if(acceptProb <= alphaMetHastings) {
+        xCurrent = xProposal
+      }
+    }
+  }
+  return(xCurrent)
+  
+}
+
+findGammaAlphaMetHastings <- function(xCurrent, xProposal) {
+  piProp = 1/(xProposal[1]*sqrt((sum(xProposal)  - xProposal[1])^2 - 4*prod(xProposal)/xProposal[1] ))
+  piCurrent = 1/(xCurrent[1]*sqrt((sum(xCurrent)  - xCurrent[1])^2 - 4*prod(xCurrent)/xCurrent[1] ))
+  return(min(1, piProp/piCurrent))
+}
+
+
 cramerVonMisesValueTest <- function(x, alpha, beta) {
   # Calculates the value for a Cramer-von Mises test.
   # 
@@ -426,7 +470,7 @@ while(sampleIndex <= NUM_SAMPLES) {
   iterationNumber = iterationNumber + 1
 }
 alphaAcceptance = (sampleIndex-1)/iterationNumber
-hist(weightsW, breaks = 300)
+hist(weightsW, breaks = 400)
 expectedPhi = sum(phi*weightsW)/sum(weightsW)
 plot(estAlpha, weightsW)
 unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
@@ -450,6 +494,8 @@ for(i in 1:NUM_GIBBS_SAMPLES) {
   }
   print(i)
 }
+gibbsS1 = sum(xSample)/NUM_POINTS
+gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
 gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
 averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
 # P-values
