@@ -387,13 +387,31 @@ negativeLogLikelihoodGamma <- function(par, x) {
   return(logLikelihood)
 }
 
+calcAveragPhiValueForData <- function(mydata) {
+  sumData = sum(mydata)
+  prodData = prod(mydata)
+  tolerance = 0.01
+  sampleNumber = 1
+  NUM_ITERATIONS = 100000
+  sumPhi = 0
+  while(sampleNumber <= NUM_ITERATIONS) {
+    x = runif(3, max = sumData)
+    if((abs(sum(x) - sumData) < tolerance) && (abs(prod(x) - prodData) < tolerance)) {
+      sumPhi = sumPhi + calcPhiGivenX(x)
+      sampleNumber = sampleNumber + 1  
+      print(sampleNumber)
+    }
+  }
+  return(sumPhi/sampleNumber)
+}
+
 alpha = 1
 beta = 1
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
-NUM_POINTS = 10
+NUM_POINTS = 3
 alphaUpperBound = 200
 alphaLowerBound = 0.05
 # Pi is used in calculation of weights
@@ -411,12 +429,13 @@ phi = rep(0, NUM_SAMPLES)
 # x1 div x2 pow x3: "x1divx2powx3Option"
 phiOption = "probValueOption"
 # Phi is the prob that X>probValue
-probValue = 1
+probValue = 0.5
 
 # Data generation options:
 # pgamma generated: "pgamma"
 # Bo data: "bo"
-dataGenOption = "pgamma"
+# Custom data: "custom"
+dataGenOption = "custom"
 
 
 
@@ -429,6 +448,8 @@ if(dataGenOption == "pgamma") {
   alphaUpperBound = 1.2
   alphaLowerBound = 0.8
   gammaData = c(4.399, 1.307, 0.085, 0.7910, 0.2345, 0.1915)
+} else if(dataGenOption == "custom") {
+  gammaData = c(0.5772030, 0.4340237, 0.4212959)
 }
 hist(gammaData)
 # Calculation of statistics
@@ -443,6 +464,10 @@ maxLogLikelihood = - negativeLogLikelihoodGamma(c(mleAlpha, mleBeta), gammaData)
 # w statistic obs. Not to be used yet.
 wObs = calcPhiGivenX(gammaData)
 cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
+
+
+# Calc Phi value for data
+phiValue = calcAveragPhiValueForData(gammaData)
 
 # Generation of samples
 
@@ -476,7 +501,7 @@ plot(estAlpha, weightsW)
 unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 1000
+NUM_GIBBS_SAMPLES = 10000
 xSample = gammaData
 phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
 gibbsObslargerWObs = 0
