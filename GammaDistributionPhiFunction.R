@@ -164,11 +164,11 @@ optimfindAlpha <- function(u, s2) {
   if((calcValueTau2(u, alphaUpperBound) < s2) || (calcValueTau2(u, alphaLowerBound) > s2)) {
     return(-1)
   }
-  solution = optim(c(0.1), optimFunction, lower=alphaLowerBound, upper=alphaUpperBound, method="Brent")
+  solution = optim(c(0.1), optimFunction, u=u, lower=alphaLowerBound, upper=alphaUpperBound, method="Brent")
   return(solution$par)
 }
 
-optimFunction <- function(alpha) {
+optimFunction <- function(alpha, u) {
   return(abs(s2-calcValueTau2(u, alpha)))
 }
 
@@ -346,14 +346,24 @@ calcAveragPhiValueForData <- function(mydata) {
 }
 
 algorithm2Sampling <- function() {
-  NUM_ALG2_SAMPLES = 1000
+  NUM_ALG2_SAMPLES = 10000
   vCurr = runif(NUM_POINTS)
   alphaCurr = optimfindAlpha(vCurr, s2)
-  piCurr = calcWeight(vCurr, aphaCurr)
+  while(alphaCurr==-1) {
+    vCurr = runif(NUM_POINTS)
+    alphaCurr = optimfindAlpha(vCurr, s2)
+  }
+  piCurr = calcWeight(vCurr, alphaCurr)
+  phiSum = 0
+  
   for(i in 1:NUM_ALG2_SAMPLES) {
+    print(i)
     vProp = runif(NUM_POINTS)
     alphaProp = optimfindAlpha(vProp, s2)
-    piProp = calcWeight(vProp, alphaProp)
+    piProp = 0
+    if(alphaProp != -1) {
+      piProp = calcWeight(vProp, alphaProp)
+    }
     alphaMetHastings = min(1, piProp/piCurr)
     uProb = runif(1)
     if(uProb <= alphaMetHastings) {
@@ -361,11 +371,35 @@ algorithm2Sampling <- function() {
       alphaCurr = alphaProp
       piCurr = piProp
     }
-    
-    
-    
+    betaCurr = findBeta(s1, vCurr, alphaCurr)
+    xSample = rep(0, length(vCurr))
+    for(i in 1:length(vCurr)) {
+      xSample[i] = betaCurr*invGammaCumulative(vCurr[i], alphaCurr)
+    }
+    phiSum = phiSum + calcPhiGivenX(xSample)
   }
-  
+  return(phiSum/NUM_ALG2_SAMPLES)
+}
+
+algorithm1Sampling <- function() {
+  NUM_ALG1_SAMPLES = 10000
+  phiSum = 0
+  for(i in 1:NUM_ALG1_SAMPLES) {
+    print(i)
+    u = runif(NUM_POINTS)
+    alphavalue = optimfindAlpha(u, s2)
+    while(alphavalue == -1) {
+      u = runif(NUM_POINTS)
+      alphavalue = optimfindAlpha(u, s2)
+    }
+    betavalue = findBeta(s1, u, alphavalue)
+    xSample = rep(0, length(u))
+    for(i in 1:length(u)) {
+      xSample[i] = betavalue*invGammaCumulative(u[i], alphavalue)
+    }
+    phiSum = phiSum + calcPhiGivenX(xSample)
+  }
+  return(phiSum/NUM_ALG1_SAMPLES)
 }
 
 alpha = 1
@@ -383,7 +417,7 @@ alphaLowerBound = 0.05
 #   "betaOption"
 #   "jeffrey"
 #   "alphaOption"
-piValue = "jeffrey"
+piValue = "constant"
 
 phi = rep(0, NUM_SAMPLES)
 # Phi options:
@@ -489,4 +523,7 @@ averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
 # P-values
 cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
+# Generate samples with algorithm 2.
+alg2PhiValue = algorithm2Sampling()
+alg1PhiVale = algorithm1Sampling()
 
