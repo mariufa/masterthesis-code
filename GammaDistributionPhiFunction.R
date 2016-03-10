@@ -160,7 +160,7 @@ integralFunction <- function(y) {
   return(log(y)*(y^(alphaValue - 1))*exp(-y)/gamma(alphaValue))
 }
 
-optimfindAlpha <- function() {
+optimfindAlpha <- function(u, s2) {
   if((calcValueTau2(u, alphaUpperBound) < s2) || (calcValueTau2(u, alphaLowerBound) > s2)) {
     return(-1)
   }
@@ -170,66 +170,6 @@ optimfindAlpha <- function() {
 
 optimFunction <- function(alpha) {
   return(abs(s2-calcValueTau2(u, alpha)))
-}
-
-findAlpha <- function(s2, u) {
-  # Function to calculate alpha value
-  # 
-  # Args:
-  #   s2: Scalar value of sufficient statistic
-  #   u: A vector
-  #   
-  # Returns:
-  #   A scalar value of alpha.
-  
-  alphaValue = 0.1
-  stepSize = 1
-  direction = 1
-  tolerance = 0.0001
-  tau2Value = 0
-  prevTau2Value = 0
-  it = 0
-  while(abs(s2 - tau2Value) > tolerance) {
-    it = it + 1
-    alphaValue = alphaValue + direction*stepSize
-    if(alphaValue<=0) {
-      alphaValue = 0.1
-      direction = 1
-    }
-    prevTau2Value = tau2Value
-    tau2Value = calcValueTau2(u, alphaValue)
-    if ((s2 > tau2Value) && (direction == -1)) {
-      stepSize = stepSize/2
-      direction = 1
-    }
-    
-    if ((s2 < tau2Value) && (direction == 1)) {
-      stepSize = stepSize/2
-      direction = -1
-    }
-    
-    if(isAlphaOutsideValidInterval(alphaValue, direction)) {
-      return(-1)
-    }  
-    if(it==100) {
-      return(-1)
-    }
-    
-  }
-  
-  return(alphaValue)
-}
-
-isAlphaOutsideValidInterval <- function(alphaValue, direction) {
-  # Function to check if the alphaValue is outside allowed interval.
-  # 
-  # Args:
-  #   alphaValue: A scalar value
-  #   direction: A scalar value. Either 1 or -1.
-  #   
-  # Returns:
-  #   Boolean value.
-  return((alphaValue < alphaLowerBound && direction == -1) || (alphaValue > alphaUpperBound && direction == 1))
 }
 
 findBeta <- function(s1, u, alphaValue) {
@@ -405,6 +345,29 @@ calcAveragPhiValueForData <- function(mydata) {
   return(sumPhi/sampleNumber)
 }
 
+algorithm2Sampling <- function() {
+  NUM_ALG2_SAMPLES = 1000
+  vCurr = runif(NUM_POINTS)
+  alphaCurr = optimfindAlpha(vCurr, s2)
+  piCurr = calcWeight(vCurr, aphaCurr)
+  for(i in 1:NUM_ALG2_SAMPLES) {
+    vProp = runif(NUM_POINTS)
+    alphaProp = optimfindAlpha(vProp, s2)
+    piProp = calcWeight(vProp, alphaProp)
+    alphaMetHastings = min(1, piProp/piCurr)
+    uProb = runif(1)
+    if(uProb <= alphaMetHastings) {
+      vCurr = vProp
+      alphaCurr = alphaProp
+      piCurr = piProp
+    }
+    
+    
+    
+  }
+  
+}
+
 alpha = 1
 beta = 1
 hStep = 0.01
@@ -478,7 +441,7 @@ estAlpha = rep(0, NUM_SAMPLES)
 estBeta = 0
 while(sampleIndex <= NUM_SAMPLES) {
   u = runif(NUM_POINTS)
-  estAlpha[sampleIndex] = optimfindAlpha()
+  estAlpha[sampleIndex] = optimfindAlpha(u, s2)
   if(estAlpha[sampleIndex] != -1) {
     estBeta = findBeta(s1, u, estAlpha[sampleIndex])
     if(estBeta > alphaLowerBound && estBeta < alphaUpperBound) {
