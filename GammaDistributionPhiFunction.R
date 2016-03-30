@@ -61,7 +61,7 @@ calcPhiGivenX <- function(x) {
       phiPoint[i] = getPhiValue(x[i])
     }
     return(sum(phiPoint)/length(phiPoint))  
-  } else if(phiOption == "x1x2divX4Option") {
+  } else if(phiOption == "x1x2divX3Option") {
     return(getPhiValue(x[1]*x[2]/x[3]))
   } else if(phiOption == "x1divx2powx3Option") {
     return((x[1]/x[2])^x[3])
@@ -422,7 +422,7 @@ piValue = "constant"
 phi = rep(0, NUM_SAMPLES)
 # Phi options:
 # x larger than a: "probValueOption"
-# x1 times x2 div x3: "x1x2divX4Option"
+# x1 times x2 div x3: "x1x2divX3Option"
 # x1 div x2 pow x3: "x1divx2powx3Option"
 phiOption = "probValueOption"
 # Phi is the prob that X>probValue
