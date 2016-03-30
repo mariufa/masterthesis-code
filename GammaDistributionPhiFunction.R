@@ -64,7 +64,7 @@ calcPhiGivenX <- function(x) {
   } else if(phiOption == "x1x2divX3Option") {
     return(getPhiValue(x[1]*x[2]/x[3]))
   } else if(phiOption == "x1divx2powx3Option") {
-    return((x[1]/x[2])^x[3])
+    return(getPhiValue((x[1]/x[2])^x[3]))
   }
   return(-1)
 }
@@ -330,9 +330,11 @@ negativeLogLikelihoodGamma <- function(par, x) {
 calcAveragPhiValueForData <- function(mydata) {
   sumData = sum(mydata)
   prodData = prod(mydata)
-  tolerance = 0.01
+  tolerance = 0.03
+  minValue = min(mydata) - 2*tolerance
+  maxValue = max(mydata) + 2*tolerance
   sampleNumber = 1
-  NUM_ITERATIONS = 100000
+  NUM_ITERATIONS = 10000
   sumPhi = 0
   while(sampleNumber <= NUM_ITERATIONS) {
     x = runif(3, max = sumData)
@@ -342,7 +344,7 @@ calcAveragPhiValueForData <- function(mydata) {
       print(sampleNumber)
     }
   }
-  return(sumPhi/sampleNumber)
+  return(sumPhi/(sampleNumber-1))
 }
 
 algorithm2Sampling <- function() {
@@ -424,15 +426,16 @@ phi = rep(0, NUM_SAMPLES)
 # x larger than a: "probValueOption"
 # x1 times x2 div x3: "x1x2divX3Option"
 # x1 div x2 pow x3: "x1divx2powx3Option"
-phiOption = "probValueOption"
+phiOption = "x1x2divX3Option"
 # Phi is the prob that X>probValue
-probValue = 0.5
+probValue = 1.3
 
 # Data generation options:
 # pgamma generated: "pgamma"
 # Bo data: "bo"
 # Custom data: "custom"
-dataGenOption = "custom"
+# Custom data2: "custom2"
+dataGenOption = "custom2"
 
 
 
@@ -447,6 +450,8 @@ if(dataGenOption == "pgamma") {
   gammaData = c(4.399, 1.307, 0.085, 0.7910, 0.2345, 0.1915)
 } else if(dataGenOption == "custom") {
   gammaData = c(0.5772030, 0.4340237, 0.4212959)
+} else if(dataGenOption == "custom2") {
+  gammaData = c(1.621813, 1.059797, 1.554334)
 }
 hist(gammaData)
 # Calculation of statistics
@@ -466,36 +471,36 @@ cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 # Calc Phi value for data
 phiValue = calcAveragPhiValueForData(gammaData)
 
-# Generation of samples
+# Generation of samples. Not to be used
 
-weightsW = rep(0, NUM_SAMPLES)
-sampleIndex = 1
-iterationNumber = 0
-estAlpha = rep(0, NUM_SAMPLES)
-estBeta = 0
-while(sampleIndex <= NUM_SAMPLES) {
-  u = runif(NUM_POINTS)
-  estAlpha[sampleIndex] = optimfindAlpha(u, s2)
-  if(estAlpha[sampleIndex] != -1) {
-    estBeta = findBeta(s1, u, estAlpha[sampleIndex])
-    if(estBeta > alphaLowerBound && estBeta < alphaUpperBound) {
-        
-      weightsW[sampleIndex] = abs(calcWeight(u, estAlpha[sampleIndex]))
-      phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
-      
-      sampleIndex = sampleIndex + 1
-      print(sampleIndex)
-    }
-    
-  }
-  #print(iterationNumber)
-  iterationNumber = iterationNumber + 1
-}
-alphaAcceptance = (sampleIndex-1)/iterationNumber
-hist(weightsW, breaks = 400)
-expectedPhi = sum(phi*weightsW)/sum(weightsW)
-plot(estAlpha, weightsW)
-unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
+# weightsW = rep(0, NUM_SAMPLES)
+# sampleIndex = 1
+# iterationNumber = 0
+# estAlpha = rep(0, NUM_SAMPLES)
+# estBeta = 0
+# while(sampleIndex <= NUM_SAMPLES) {
+#   u = runif(NUM_POINTS)
+#   estAlpha[sampleIndex] = optimfindAlpha(u, s2)
+#   if(estAlpha[sampleIndex] != -1) {
+#     estBeta = findBeta(s1, u, estAlpha[sampleIndex])
+#     if(estBeta > alphaLowerBound && estBeta < alphaUpperBound) {
+#         
+#       weightsW[sampleIndex] = abs(calcWeight(u, estAlpha[sampleIndex]))
+#       phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
+#       
+#       sampleIndex = sampleIndex + 1
+#       print(sampleIndex)
+#     }
+#     
+#   }
+#   #print(iterationNumber)
+#   iterationNumber = iterationNumber + 1
+# }
+# alphaAcceptance = (sampleIndex-1)/iterationNumber
+# hist(weightsW, breaks = 400)
+# expectedPhi = sum(phi*weightsW)/sum(weightsW)
+# plot(estAlpha, weightsW)
+# unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
 NUM_GIBBS_SAMPLES = 10000
