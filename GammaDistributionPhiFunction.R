@@ -39,12 +39,11 @@ getPiValue <- function() {
 }
 
 calcPhi <- function(u, alpha) {
-  phiPoint = rep(0, length(u))
+  xValue = rep(0, length(u))
   for(i in 1:length(u)) {
-    xValue = invGammaCumulative(u[i], alpha)
-    phiPoint[i] = getPhiValue(xValue)
+    xValue[i] = invGammaCumulative(u[i], alpha)
   }
-  return(sum(phiPoint)/length(u))
+  return(calcPhiGivenX(xValue))
 }
 
 calcPhiGivenX <- function(x) {
@@ -55,14 +54,30 @@ calcPhiGivenX <- function(x) {
   #   
   # Returns:
   #  A scalar.
-  phiPoint = rep(0, length(x))
-  for(i in 1:length(x)) {
-    phiPoint[i] = getPhiValue(x[i])
+  
+  if(phiOption == "probValueOption") {
+    phiPoint = rep(0, length(x))
+    for(i in 1:length(x)) {
+      phiPoint[i] = getPhiValue(x[i])
+    }
+    return(sum(phiPoint)/length(phiPoint))  
+  } else if(phiOption == "x1x2divX3Option") {
+    return(getPhiValue(x[1]*x[2]/x[3]))
+  } else if(phiOption == "x1divx2powx3Option") {
+    return(getPhiValue((x[1]/x[2])^x[3]))
   }
-  return(sum(phiPoint)/length(phiPoint))
+  return(-1)
 }
 
+
 getPhiValue <- function(xValue) {
+  # Calculates phi for an element of an x vector.
+  # 
+  # Args:
+  #   xValue: A scalar value.
+  #   
+  # Returns:
+  #   
   return(xValue > probValue)
 }
 
@@ -145,75 +160,16 @@ integralFunction <- function(y) {
   return(log(y)*(y^(alphaValue - 1))*exp(-y)/gamma(alphaValue))
 }
 
-optimfindAlpha <- function() {
+optimfindAlpha <- function(u, s2) {
   if((calcValueTau2(u, alphaUpperBound) < s2) || (calcValueTau2(u, alphaLowerBound) > s2)) {
     return(-1)
   }
-  return(optim(c(0.1), optimFunction, lower=alphaLowerBound, upper=alphaUpperBound, method="Brent")$par)
+  solution = optim(c(0.1), optimFunction, u=u, lower=alphaLowerBound, upper=alphaUpperBound, method="Brent")
+  return(solution$par)
 }
 
-optimFunction <- function(alpha) {
+optimFunction <- function(alpha, u) {
   return(abs(s2-calcValueTau2(u, alpha)))
-}
-
-findAlpha <- function(s2, u) {
-  # Function to calculate alpha value
-  # 
-  # Args:
-  #   s2: Scalar value of sufficient statistic
-  #   u: A vector
-  #   
-  # Returns:
-  #   A scalar value of alpha.
-  
-  alphaValue = 0.1
-  stepSize = 1
-  direction = 1
-  tolerance = 0.0001
-  tau2Value = 0
-  prevTau2Value = 0
-  it = 0
-  while(abs(s2 - tau2Value) > tolerance) {
-    it = it + 1
-    alphaValue = alphaValue + direction*stepSize
-    if(alphaValue<=0) {
-      alphaValue = 0.1
-      direction = 1
-    }
-    prevTau2Value = tau2Value
-    tau2Value = calcValueTau2(u, alphaValue)
-    if ((s2 > tau2Value) && (direction == -1)) {
-      stepSize = stepSize/2
-      direction = 1
-    }
-    
-    if ((s2 < tau2Value) && (direction == 1)) {
-      stepSize = stepSize/2
-      direction = -1
-    }
-    
-    if(isAlphaOutsideValidInterval(alphaValue, direction)) {
-      return(-1)
-    }  
-    if(it==100) {
-      return(-1)
-    }
-    
-  }
-  
-  return(alphaValue)
-}
-
-isAlphaOutsideValidInterval <- function(alphaValue, direction) {
-  # Function to check if the alphaValue is outside allowed interval.
-  # 
-  # Args:
-  #   alphaValue: A scalar value
-  #   direction: A scalar value. Either 1 or -1.
-  #   
-  # Returns:
-  #   Boolean value.
-  return((alphaValue < alphaLowerBound && direction == -1) || (alphaValue > alphaUpperBound && direction == 1))
 }
 
 findBeta <- function(s1, u, alphaValue) {
@@ -246,18 +202,25 @@ calcValueTau2Method2 <- function(x) {
 }
 
 gibbsSampling <- function(xInit) {
-  sumX = sum(xInit)
-  prodX = prod(xInit)
   NUM_ITERATIONS = 5000
   xCurrent = xInit
   for(i in 1:NUM_ITERATIONS) {
+    randomXpos = sample(length(xCurrent), size=3)
+    sumX = xCurrent[randomXpos[1]] + xCurrent[randomXpos[2]] + xCurrent[randomXpos[3]]
+    prodX = xCurrent[randomXpos[1]]*xCurrent[randomXpos[2]]*xCurrent[randomXpos[3]]
     x1 = runif(1)*sumX
     if(isValidX1Proposal(x1, sumX, prodX)) {
       roots = findRoots(x1, sumX, prodX)
       x2 = roots[1]
       x3 = roots[2]
-      xProposal = c(x1, x2, x3)
-      alphaMetHastings = findAlphaMetHastings(xCurrent, xProposal)
+      if(is.nan(x2) || is.nan(x3)){
+        print((x1^3 - 2*sumX*x1^2 + (sumX^2)*x1 - 4*prodX))
+      }
+      xProposal = xCurrent
+      xProposal[randomXpos[1]] = x1
+      xProposal[randomXpos[2]] = x2
+      xProposal[randomXpos[3]] = x3
+      alphaMetHastings = findAlphaMetHastings(c(xCurrent[randomXpos[1]], xCurrent[randomXpos[2]], xCurrent[randomXpos[3]]), c(xProposal[randomXpos[1]], xProposal[randomXpos[2]], xProposal[randomXpos[3]]))
       acceptProb = runif(1)
       if(acceptProb <= alphaMetHastings) {
         xCurrent = xProposal
@@ -283,14 +246,172 @@ findAlphaMetHastings <- function(xCurrent, xProposal) {
   return(min(1, piProp/piCurrent))
 }
 
-alpha = 2
-beta = 2
+
+GammaGibbsSampling <- function(xInit) {
+  # A Gibbs sampling for a Gamma distribution
+  # 
+  # Args:
+  #   xInit: Initial sample. A vector.
+  #   
+  # Return:
+  #   A sample from a Gamma distribution. A vector.
+  NUM_ITERATIONS = 5000
+  xCurrent = xInit
+  for(i in 1:NUM_ITERATIONS) {
+    randomXpos = sample(length(xCurrent), size=3)
+    sumX = xCurrent[randomXpos[1]] + xCurrent[randomXpos[2]] + xCurrent[randomXpos[3]]
+    prodX = xCurrent[randomXpos[1]]*xCurrent[randomXpos[2]]*xCurrent[randomXpos[3]]
+    x1 = runif(1)*sumX
+    if(isValidX1Proposal(x1, sumX, prodX)) {
+      roots = findRoots(x1, sumX, prodX)
+      x2 = roots[1]
+      x3 = roots[2]
+      if(is.nan(x2) || is.nan(x3)){
+        print((x1^3 - 2*sumX*x1^2 + (sumX^2)*x1 - 4*prodX))
+      }
+      xProposal = xCurrent
+      xProposal[randomXpos[1]] = x1
+      xProposal[randomXpos[2]] = x2
+      xProposal[randomXpos[3]] = x3
+      alphaMetHastings = findGammaAlphaMetHastings(c(xCurrent[randomXpos[1]], xCurrent[randomXpos[2]], xCurrent[randomXpos[3]]), c(xProposal[randomXpos[1]], xProposal[randomXpos[2]], xProposal[randomXpos[3]]))
+      acceptProb = runif(1)
+      if(acceptProb <= alphaMetHastings) {
+        xCurrent = xProposal
+      }
+    }
+  }
+  return(xCurrent)
+  
+}
+
+findGammaAlphaMetHastings <- function(xCurrent, xProposal) {
+  piProp = 1/(xProposal[1]*sqrt((sum(xProposal)  - xProposal[1])^2 - 4*prod(xProposal)/xProposal[1] ))
+  piCurrent = 1/(xCurrent[1]*sqrt((sum(xCurrent)  - xCurrent[1])^2 - 4*prod(xCurrent)/xCurrent[1] ))
+  return(min(1, piProp/piCurrent))
+}
+
+
+cramerVonMisesValueTest <- function(x, alpha, beta) {
+  # Calculates the value for a Cramer-von Mises test.
+  # 
+  # Args:
+  #   x: A vector sample.
+  #   
+  # Returns:
+  #   A scalar value.
+  cramerSum = 0
+  for(i in 1:length(x)) {
+    cramerSum = cramerSum + ((2*i - 1)/(2*length(x)) - pgamma(x[i], shape=alpha, scale=beta))^2
+  }
+  cramer = 12/(length(x)) + cramerSum
+  return(cramer)
+}
+
+findGammaMLE <- function(x){
+  solution = optim(c(1,1), negativeLogLikelihoodGamma, x=x)
+  return(solution$par)
+}
+
+negativeLogLikelihoodGamma <- function(par, x) {
+  # Calculates the negative log-likelihood for a gamma distribution.
+  # 
+  # Args:
+  #   par: A vector of size 2. First element is alpha and second element is beta.
+  #   x: Data to calculate log-likelihood from. A vector.
+  #   
+  # Returns:
+  #  The log-likelihood value. A scalar
+  alpha = par[1]
+  beta = par[2]
+  logLikelihood = -((alpha - 1)*sum(log(x)) - (1/beta)*sum(x) - length(x)*log(gamma(alpha)) - alpha*length(x)*log(beta))
+  return(logLikelihood)
+}
+
+calcAveragPhiValueForData <- function(mydata) {
+  sumData = sum(mydata)
+  prodData = prod(mydata)
+  tolerance = 0.03
+  minValue = min(mydata) - 2*tolerance
+  maxValue = max(mydata) + 2*tolerance
+  sampleNumber = 1
+  NUM_ITERATIONS = 10000
+  sumPhi = 0
+  while(sampleNumber <= NUM_ITERATIONS) {
+    x = runif(3, max = sumData)
+    if((abs(sum(x) - sumData) < tolerance) && (abs(prod(x) - prodData) < tolerance)) {
+      sumPhi = sumPhi + calcPhiGivenX(x)
+      sampleNumber = sampleNumber + 1  
+      print(sampleNumber)
+    }
+  }
+  return(sumPhi/(sampleNumber-1))
+}
+
+algorithm2Sampling <- function() {
+  NUM_ALG2_SAMPLES = 10000
+  vCurr = runif(NUM_POINTS)
+  alphaCurr = optimfindAlpha(vCurr, s2)
+  while(alphaCurr==-1) {
+    vCurr = runif(NUM_POINTS)
+    alphaCurr = optimfindAlpha(vCurr, s2)
+  }
+  piCurr = calcWeight(vCurr, alphaCurr)
+  phiSum = 0
+  
+  for(i in 1:NUM_ALG2_SAMPLES) {
+    print(i)
+    vProp = runif(NUM_POINTS)
+    alphaProp = optimfindAlpha(vProp, s2)
+    piProp = 0
+    if(alphaProp != -1) {
+      piProp = calcWeight(vProp, alphaProp)
+    }
+    alphaMetHastings = min(1, piProp/piCurr)
+    uProb = runif(1)
+    if(uProb <= alphaMetHastings) {
+      vCurr = vProp
+      alphaCurr = alphaProp
+      piCurr = piProp
+    }
+    betaCurr = findBeta(s1, vCurr, alphaCurr)
+    xSample = rep(0, length(vCurr))
+    for(i in 1:length(vCurr)) {
+      xSample[i] = betaCurr*invGammaCumulative(vCurr[i], alphaCurr)
+    }
+    phiSum = phiSum + calcPhiGivenX(xSample)
+  }
+  return(phiSum/NUM_ALG2_SAMPLES)
+}
+
+algorithm1Sampling <- function() {
+  NUM_ALG1_SAMPLES = 10000
+  phiSum = 0
+  for(i in 1:NUM_ALG1_SAMPLES) {
+    print(i)
+    u = runif(NUM_POINTS)
+    alphavalue = optimfindAlpha(u, s2)
+    while(alphavalue == -1) {
+      u = runif(NUM_POINTS)
+      alphavalue = optimfindAlpha(u, s2)
+    }
+    betavalue = findBeta(s1, u, alphavalue)
+    xSample = rep(0, length(u))
+    for(i in 1:length(u)) {
+      xSample[i] = betavalue*invGammaCumulative(u[i], alphavalue)
+    }
+    phiSum = phiSum + calcPhiGivenX(xSample)
+  }
+  return(phiSum/NUM_ALG1_SAMPLES)
+}
+
+alpha = 1
+beta = 1
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
 NUM_SAMPLES = 1000
 NUM_POINTS = 3
-alphaUpperBound = 20
+alphaUpperBound = 200
 alphaLowerBound = 0.05
 # Pi is used in calculation of weights
 # Options are:
@@ -298,61 +419,116 @@ alphaLowerBound = 0.05
 #   "betaOption"
 #   "jeffrey"
 #   "alphaOption"
-piValue = "jeffrey"
+piValue = "constant"
+
+phi = rep(0, NUM_SAMPLES)
+# Phi options:
+# x larger than a: "probValueOption"
+# x1 times x2 div x3: "x1x2divX3Option"
+# x1 div x2 pow x3: "x1divx2powx3Option"
+phiOption = "x1x2divX3Option"
+# Phi is the prob that X>probValue
+probValue = 1.3
+
+# Data generation options:
+# pgamma generated: "pgamma"
+# Bo data: "bo"
+# Custom data: "custom"
+# Custom data2: "custom2"
+dataGenOption = "custom2"
+
+
 
 # Generate data
-gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)
+gammaData = 0
+if(dataGenOption == "pgamma") {
+  gammaData = rgamma(NUM_POINTS, shape=alpha, scale = beta)  
+} else if(dataGenOption == "bo") {
+  NUM_POINTS = 6
+  alphaUpperBound = 1.2
+  alphaLowerBound = 0.8
+  gammaData = c(4.399, 1.307, 0.085, 0.7910, 0.2345, 0.1915)
+} else if(dataGenOption == "custom") {
+  gammaData = c(0.5772030, 0.4340237, 0.4212959)
+} else if(dataGenOption == "custom2") {
+  gammaData = c(1.621813, 1.059797, 1.554334)
+}
 hist(gammaData)
 # Calculation of statistics
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
+# Log-likelihood
+negativeloglikihood = negativeLogLikelihoodGamma(c(alpha, beta), gammaData)
+mleEstimators = findGammaMLE(gammaData)
+mleAlpha = mleEstimators[1]
+mleBeta = mleEstimators[2]
+maxLogLikelihood = - negativeLogLikelihoodGamma(c(mleAlpha, mleBeta), gammaData)
 # w statistic obs. Not to be used yet.
 wObs = calcPhiGivenX(gammaData)
+cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 
-# Generation of samples
-phi = rep(0, NUM_SAMPLES)
-# Phi is the prob that X>probValue
-probValue = 2
-weightsW = rep(0, NUM_SAMPLES)
-sampleIndex = 1
-iterationNumber = 0
-estAlpha = rep(0, NUM_SAMPLES)
-estBeta = 0
-while(sampleIndex <= NUM_SAMPLES) {
-  u = runif(NUM_POINTS)
-  estAlpha[sampleIndex] = optimfindAlpha()
-  if(estAlpha[sampleIndex] != -1) {
-    estBeta = findBeta(s1, u, estAlpha[sampleIndex])
-    weightsW[sampleIndex] = abs(calcWeight(u, estAlpha[sampleIndex]))
-    phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
-    
-    sampleIndex = sampleIndex + 1
-    print(sampleIndex)
-    
-  }
-  #print(iterationNumber)
-  iterationNumber = iterationNumber + 1
-}
-alphaAcceptance = (sampleIndex-1)/iterationNumber
-hist(weightsW, breaks = 300)
-expectedPhi = sum(phi*weightsW)/sum(weightsW)
-plot(estAlpha, weightsW)
-unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
+
+# Calc Phi value for data
+phiValue = calcAveragPhiValueForData(gammaData)
+
+# Generation of samples. Not to be used
+
+# weightsW = rep(0, NUM_SAMPLES)
+# sampleIndex = 1
+# iterationNumber = 0
+# estAlpha = rep(0, NUM_SAMPLES)
+# estBeta = 0
+# while(sampleIndex <= NUM_SAMPLES) {
+#   u = runif(NUM_POINTS)
+#   estAlpha[sampleIndex] = optimfindAlpha(u, s2)
+#   if(estAlpha[sampleIndex] != -1) {
+#     estBeta = findBeta(s1, u, estAlpha[sampleIndex])
+#     if(estBeta > alphaLowerBound && estBeta < alphaUpperBound) {
+#         
+#       weightsW[sampleIndex] = abs(calcWeight(u, estAlpha[sampleIndex]))
+#       phi[sampleIndex] = calcPhi(u, estAlpha[sampleIndex])
+#       
+#       sampleIndex = sampleIndex + 1
+#       print(sampleIndex)
+#     }
+#     
+#   }
+#   #print(iterationNumber)
+#   iterationNumber = iterationNumber + 1
+# }
+# alphaAcceptance = (sampleIndex-1)/iterationNumber
+# hist(weightsW, breaks = 400)
+# expectedPhi = sum(phi*weightsW)/sum(weightsW)
+# plot(estAlpha, weightsW)
+# unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 1000
+NUM_GIBBS_SAMPLES = 10000
 xSample = gammaData
 phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
 gibbsObslargerWObs = 0
+cramerNum = 0
 for(i in 1:NUM_GIBBS_SAMPLES) {
   xSample = gibbsSampling(xSample)
   phiGibbs[i] = calcPhiGivenX(xSample)
   if(phiGibbs[i] >= wObs) {
     gibbsObslargerWObs = gibbsObslargerWObs + 1
   }
+  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
+  #print(cramerStat)
+  if(cramerStat >= cramerObs) {
+    cramerNum = cramerNum + 1
+  }
   print(i)
 }
+gibbsS1 = sum(xSample)/NUM_POINTS
+gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
 gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
 averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
+# P-values
+cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
+# Generate samples with algorithm 2.
+alg2PhiValue = algorithm2Sampling()
+alg1PhiVale = algorithm1Sampling()
 
