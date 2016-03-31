@@ -348,7 +348,7 @@ calcAveragPhiValueForData <- function(mydata) {
 }
 
 algorithm2Sampling <- function() {
-  NUM_ALG2_SAMPLES = 10000
+  NUM_ALG2_SAMPLES = 100000
   vCurr = runif(NUM_POINTS)
   alphaCurr = optimfindAlpha(vCurr, s2)
   while(alphaCurr==-1) {
@@ -384,7 +384,7 @@ algorithm2Sampling <- function() {
 }
 
 algorithm1Sampling <- function() {
-  NUM_ALG1_SAMPLES = 10000
+  NUM_ALG1_SAMPLES = 100000
   phiSum = 0
   for(i in 1:NUM_ALG1_SAMPLES) {
     print(i)
@@ -503,7 +503,7 @@ phiValue = calcAveragPhiValueForData(gammaData)
 # unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 10000
+NUM_GIBBS_SAMPLES = 100000
 xSample = gammaData
 phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
 gibbsObslargerWObs = 0
@@ -531,4 +531,9 @@ cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 # Generate samples with algorithm 2.
 alg2PhiValue = algorithm2Sampling()
 alg1PhiVale = algorithm1Sampling()
+
+# Save image
+save.image(file="model1.RData")
+
+print("Done")
 
