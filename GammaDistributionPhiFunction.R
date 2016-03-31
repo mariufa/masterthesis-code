@@ -334,7 +334,7 @@ calcAveragPhiValueForData <- function(mydata) {
   minValue = min(mydata) - 2*tolerance
   maxValue = max(mydata) + 2*tolerance
   sampleNumber = 1
-  NUM_ITERATIONS = 10000
+  NUM_ITERATIONS = 100000
   sumPhi = 0
   while(sampleNumber <= NUM_ITERATIONS) {
     x = runif(3, max = sumData)
