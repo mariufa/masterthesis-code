@@ -287,6 +287,9 @@ GammaGibbsSampling <- function(xInit) {
 findGammaAlphaMetHastings <- function(xCurrent, xProposal) {
   piProp = 1/(xProposal[1]*sqrt((sum(xProposal)  - xProposal[1])^2 - 4*prod(xProposal)/xProposal[1] ))
   piCurrent = 1/(xCurrent[1]*sqrt((sum(xCurrent)  - xCurrent[1])^2 - 4*prod(xCurrent)/xCurrent[1] ))
+  if(is.nan(piCurrent)) {
+    print(xCurrent)
+  }
   return(min(1, piProp/piCurrent))
 }
 
@@ -348,7 +351,7 @@ calcAveragPhiValueForData <- function(mydata) {
 }
 
 algorithm2Sampling <- function() {
-  NUM_ALG2_SAMPLES = 100000
+  NUM_ALG2_SAMPLES = 10000
   vCurr = runif(NUM_POINTS)
   alphaCurr = optimfindAlpha(vCurr, s2)
   while(alphaCurr==-1) {
@@ -384,7 +387,7 @@ algorithm2Sampling <- function() {
 }
 
 algorithm1Sampling <- function() {
-  NUM_ALG1_SAMPLES = 100000
+  NUM_ALG1_SAMPLES = 10000
   phiSum = 0
   for(i in 1:NUM_ALG1_SAMPLES) {
     print(i)
@@ -426,9 +429,9 @@ phi = rep(0, NUM_SAMPLES)
 # x larger than a: "probValueOption"
 # x1 times x2 div x3: "x1x2divX3Option"
 # x1 div x2 pow x3: "x1divx2powx3Option"
-phiOption = "x1x2divX3Option"
+phiOption = "probValueOption"
 # Phi is the prob that X>probValue
-probValue = 1.3
+probValue = 1.5
 
 # Data generation options:
 # pgamma generated: "pgamma"
@@ -503,7 +506,7 @@ phiValue = calcAveragPhiValueForData(gammaData)
 # unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 100000
+NUM_GIBBS_SAMPLES = 10000
 xSample = gammaData
 phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
 gibbsObslargerWObs = 0
