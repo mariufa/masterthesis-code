@@ -337,7 +337,7 @@ calcAveragPhiValueForData <- function(mydata) {
   minValue = min(mydata) - 2*tolerance
   maxValue = max(mydata) + 2*tolerance
   sampleNumber = 1
-  NUM_ITERATIONS = 100000
+  NUM_ITERATIONS = 10000
   sumPhi = 0
   while(sampleNumber <= NUM_ITERATIONS) {
     x = runif(3, max = sumData)
@@ -407,6 +407,24 @@ algorithm1Sampling <- function() {
   return(phiSum/NUM_ALG1_SAMPLES)
 }
 
+naiveSampling2 <- function(myData) {
+  NUM_NAIVE_SAMPLES = 10000
+  sumData = sum(myData)
+  prodData = prod(myData)
+  tolerance = 0.01
+  sampleNumber = 0
+  sumPhi = 0
+  while(sampleNumber<NUM_NAIVE_SAMPLES) {
+    x = rgamma(3,1,1)
+    if((abs(sum(x) - sumData) < tolerance) && (abs(prod(x) - prodData) < tolerance)) {
+      sumPhi = sumPhi + calcPhiGivenX(x)
+      sampleNumber = sampleNumber + 1  
+      print(sampleNumber)
+    }
+  }
+  return(sumPhi/sampleNumber)
+}
+
 alpha = 1
 beta = 1
 hStep = 0.01
@@ -431,14 +449,14 @@ phi = rep(0, NUM_SAMPLES)
 # x1 div x2 pow x3: "x1divx2powx3Option"
 phiOption = "probValueOption"
 # Phi is the prob that X>probValue
-probValue = 1.5
+probValue = 0.5
 
 # Data generation options:
 # pgamma generated: "pgamma"
 # Bo data: "bo"
 # Custom data: "custom"
 # Custom data2: "custom2"
-dataGenOption = "custom2"
+dataGenOption = "custom"
 
 
 
@@ -473,6 +491,7 @@ cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 
 # Calc Phi value for data
 phiValue = calcAveragPhiValueForData(gammaData)
+naivePhiValue = naiveSampling2(gammaData)
 
 # Generation of samples. Not to be used
 
