@@ -447,7 +447,7 @@ phi = rep(0, NUM_SAMPLES)
 # x larger than a: "probValueOption"
 # x1 times x2 div x3: "x1x2divX3Option"
 # x1 div x2 pow x3: "x1divx2powx3Option"
-phiOption = "probValueOption"
+phiOption = "x1x2divX3Option"
 # Phi is the prob that X>probValue
 probValue = 0.5
 
