@@ -273,8 +273,12 @@ GammaGibbsSampling <- function(xInit) {
       xProposal[randomXpos[1]] = x1
       xProposal[randomXpos[2]] = x2
       xProposal[randomXpos[3]] = x3
+      alphaMetHastings = 0
       alphaMetHastings = findGammaAlphaMetHastings(c(xCurrent[randomXpos[1]], xCurrent[randomXpos[2]], xCurrent[randomXpos[3]]), c(xProposal[randomXpos[1]], xProposal[randomXpos[2]], xProposal[randomXpos[3]]))
       acceptProb = runif(1)
+      if(is.nan(alphaMetHastings)) {
+        alphaMetHastings = 0
+      }
       if(acceptProb <= alphaMetHastings) {
         xCurrent = xProposal
       }
@@ -525,7 +529,7 @@ naivePhiValue = naiveSampling2(gammaData)
 # unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 100000
+NUM_GIBBS_SAMPLES = 1000000
 xSample = gammaData
 phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
 gibbsObslargerWObs = 0

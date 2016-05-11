@@ -525,30 +525,30 @@ naivePhiValue = naiveSampling2(gammaData)
 # unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 1000000
-xSample = gammaData
-phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
-gibbsObslargerWObs = 0
-cramerNum = 0
-for(i in 1:NUM_GIBBS_SAMPLES) {
-  xSample = gibbsSampling(xSample)
-  phiGibbs[i] = calcPhiGivenX(xSample)
-  if(phiGibbs[i] >= wObs) {
-    gibbsObslargerWObs = gibbsObslargerWObs + 1
-  }
-  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
-  #print(cramerStat)
-  if(cramerStat >= cramerObs) {
-    cramerNum = cramerNum + 1
-  }
-  print(i)
-}
-gibbsS1 = sum(xSample)/NUM_POINTS
-gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
-gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
-averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
-# P-values
-cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
+#NUM_GIBBS_SAMPLES = 1000000
+#xSample = gammaData
+#phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
+#gibbsObslargerWObs = 0
+#cramerNum = 0
+#for(i in 1:NUM_GIBBS_SAMPLES) {
+#  xSample = gibbsSampling(xSample)
+#  phiGibbs[i] = calcPhiGivenX(xSample)
+#  if(phiGibbs[i] >= wObs) {
+#    gibbsObslargerWObs = gibbsObslargerWObs + 1
+#  }
+#  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
+#  #print(cramerStat)
+#  if(cramerStat >= cramerObs) {
+#    cramerNum = cramerNum + 1
+#  }
+#  print(i)
+#}
+#gibbsS1 = sum(xSample)/NUM_POINTS
+#gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
+#gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
+#averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
+## P-values
+#cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
 # Generate samples with algorithm 2.
 alg2PhiValue = algorithm2Sampling()
