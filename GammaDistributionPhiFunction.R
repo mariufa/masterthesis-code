@@ -354,8 +354,7 @@ calcAveragPhiValueForData <- function(mydata) {
   return(sumPhi/(sampleNumber-1))
 }
 
-algorithm2Sampling <- function() {
-  NUM_ALG2_SAMPLES = 100000
+algorithm2Sampling <- function(NUM_ALG2_SAMPLES) {
   vCurr = runif(NUM_POINTS)
   alphaCurr = optimfindAlpha(vCurr, s2)
   while(alphaCurr==-1) {
@@ -390,8 +389,7 @@ algorithm2Sampling <- function() {
   return(phiSum/NUM_ALG2_SAMPLES)
 }
 
-algorithm1Sampling <- function() {
-  NUM_ALG1_SAMPLES = 100000
+algorithm1Sampling <- function(NUM_ALG1_SAMPLES) {
   phiSum = 0
   for(i in 1:NUM_ALG1_SAMPLES) {
     print(i)
@@ -555,8 +553,9 @@ averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
 cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
 # Generate samples with algorithm 2.
-alg2PhiValue = algorithm2Sampling()
-alg1PhiVale = algorithm1Sampling()
+NUM_SAMPLES = 1000000
+alg2PhiValue = algorithm2Sampling(NUM_SAMPLES)
+alg1PhiVale = algorithm1Sampling(NUM_SAMPLES)
 
 # Save image
 save.image(file="model13.RData")
