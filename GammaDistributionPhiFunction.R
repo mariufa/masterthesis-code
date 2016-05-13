@@ -415,15 +415,19 @@ naiveSampling2 <- function(myData, tolerance) {
   prodData = prod(myData)
   sampleNumber = 0
   sumPhi = 0
+  iterations = 0
   while(sampleNumber<NUM_NAIVE_SAMPLES) {
     x = rgamma(3,1,1)
+    iterations = iterations + 1
     if((abs(sum(x) - sumData) < tolerance) && (abs(prod(x) - prodData) < tolerance)) {
       sumPhi = sumPhi + calcPhiGivenX(x)
       sampleNumber = sampleNumber + 1  
       print(sampleNumber)
     }
   }
-  return(sumPhi/sampleNumber)
+  acceptRate = sampleNumber/iterations
+  averagePhi = sumPhi/sampleNumber
+  return(c(acceptRate, averagePhi))
 }
 
 alpha = 1
@@ -492,7 +496,8 @@ cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 
 # Calc Phi value for data
 phiValue = calcAveragPhiValueForData(gammaData)
-naivePhiValue = naiveSampling2(gammaData)
+tolerance = 0.01
+naiveSampler = naiveSampling2(gammaData, tolerance)
 
 # Generation of samples. Not to be used
 
