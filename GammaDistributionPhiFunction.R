@@ -409,11 +409,10 @@ algorithm1Sampling <- function(NUM_ALG1_SAMPLES) {
   return(phiSum/NUM_ALG1_SAMPLES)
 }
 
-naiveSampling2 <- function(myData) {
+naiveSampling2 <- function(myData, tolerance) {
   NUM_NAIVE_SAMPLES = 10000
   sumData = sum(myData)
   prodData = prod(myData)
-  tolerance = 0.01
   sampleNumber = 0
   sumPhi = 0
   while(sampleNumber<NUM_NAIVE_SAMPLES) {
