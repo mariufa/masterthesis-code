@@ -410,7 +410,7 @@ algorithm1Sampling <- function(NUM_ALG1_SAMPLES) {
 }
 
 naiveSampling2 <- function(myData, tolerance) {
-  NUM_NAIVE_SAMPLES = 10000
+  NUM_NAIVE_SAMPLES = 20000
   sumData = sum(myData)
   prodData = prod(myData)
   sampleNumber = 0
@@ -498,6 +498,20 @@ cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 phiValue = calcAveragPhiValueForData(gammaData)
 tolerance = 0.01
 naiveSampler = naiveSampling2(gammaData, tolerance)
+
+# Tolerance accuracy plot
+toleranceRange = seq(0.005, 0.4, 0.005)
+resultAcceptance = rep(0, length(toleranceRange))
+resultValue = rep(0, length(toleranceRange))
+i = 0
+for(tol in toleranceRange) {
+  i = i+1
+  result = naiveSampling2(gammaData, tol)
+  resultAcceptance[i] = result[1]
+  resultValue[i] = result[2]
+}
+plot(toleranceRange, resultValue)
+plot(toleranceRange, resultAcceptance)
 
 # Generation of samples. Not to be used
 
