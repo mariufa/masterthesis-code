@@ -500,18 +500,18 @@ tolerance = 0.01
 naiveSampler = naiveSampling2(gammaData, tolerance)
 
 # Tolerance accuracy plot
-toleranceRange = seq(0.005, 0.4, 0.005)
-resultAcceptance = rep(0, length(toleranceRange))
-resultValue = rep(0, length(toleranceRange))
-i = 0
-for(tol in toleranceRange) {
-  i = i+1
-  result = naiveSampling2(gammaData, tol)
-  resultAcceptance[i] = result[1]
-  resultValue[i] = result[2]
-}
-plot(toleranceRange, resultValue)
-plot(toleranceRange, resultAcceptance)
+#toleranceRange = seq(0.005, 2, 0.001)
+#resultAcceptance = rep(0, length(toleranceRange))
+#resultValue = rep(0, length(toleranceRange))
+#i = 0
+#for(tol in toleranceRange) {
+#  i = i+1
+#  result = naiveSampling2(gammaData, tol)
+#  resultAcceptance[i] = result[1]
+#  resultValue[i] = result[2]
+#}
+#plot(toleranceRange, resultValue)
+#plot(toleranceRange, resultAcceptance)
 
 # Generation of samples. Not to be used
 
@@ -545,38 +545,56 @@ plot(toleranceRange, resultAcceptance)
 # unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 1000000
-xSample = gammaData
-phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
-gibbsObslargerWObs = 0
-cramerNum = 0
-for(i in 1:NUM_GIBBS_SAMPLES) {
-  xSample = gibbsSampling(xSample)
-  phiGibbs[i] = calcPhiGivenX(xSample)
-  if(phiGibbs[i] >= wObs) {
-    gibbsObslargerWObs = gibbsObslargerWObs + 1
-  }
-  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
-  #print(cramerStat)
-  if(cramerStat >= cramerObs) {
-    cramerNum = cramerNum + 1
-  }
-  print(i)
-}
-gibbsS1 = sum(xSample)/NUM_POINTS
-gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
-gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
-averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
-# P-values
-cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
+#NUM_GIBBS_SAMPLES = 1000000
+#xSample = gammaData
+#phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
+#gibbsObslargerWObs = 0
+#cramerNum = 0
+#for(i in 1:NUM_GIBBS_SAMPLES) {
+#  xSample = gibbsSampling(xSample)
+#  phiGibbs[i] = calcPhiGivenX(xSample)
+#  if(phiGibbs[i] >= wObs) {
+#    gibbsObslargerWObs = gibbsObslargerWObs + 1
+#  }
+#  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
+#  #print(cramerStat)
+#  if(cramerStat >= cramerObs) {
+#    cramerNum = cramerNum + 1
+#  }
+#  print(i)
+#}
+#gibbsS1 = sum(xSample)/NUM_POINTS
+#gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
+#gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
+#averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
+## P-values
+#cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
 # Generate samples with algorithm 2.
 NUM_SAMPLES = 1000000
-alg2PhiValue = algorithm2Sampling(NUM_SAMPLES)
-alg1PhiVale = algorithm1Sampling(NUM_SAMPLES)
+# Do in parallell
+library("parallel")
+library("foreach")
+library("doParallel")
+
+cl = makeCluster(detectCores() - 1)
+registerDoParallel(cl, cores = detectCores() - 1)
+alg2Results = rep(0, 20)
+alg1Rsults = rep(0,20)
+
+foreach(i=1:20, .packages = c("ncdf","chron","stats"),
+        .combine = rbind) %dopar% {
+          try({
+            alg2Results[i] = algorithm2Sampling(NUM_SAMPLES/20)
+            alg1Results[i] = algorithm1Sampling(NUM_SAMPLES/20)            
+          })
+}
+
+stopCluster(cl)
+
 
 # Save image
-save.image(file="model13.RData")
+save.image(file="parallellTry.RData")
 
 print("Done")
 
