@@ -65,6 +65,8 @@ calcPhiGivenX <- function(x) {
     return(getPhiValue(x[1]*x[2]/x[3]))
   } else if(phiOption == "x1divx2powx3Option") {
     return(getPhiValue((x[1]/x[2])^x[3]))
+  } else if(phiOption == "sinusfunction") {
+    return(sin(x[1]) + sin(x[2]) + sin(x[3]))
   }
   return(-1)
 }
@@ -410,7 +412,7 @@ algorithm1Sampling <- function(NUM_ALG1_SAMPLES) {
 }
 
 naiveSampling2 <- function(myData, tolerance) {
-  NUM_NAIVE_SAMPLES = 20000
+  NUM_NAIVE_SAMPLES = 2000
   sumData = sum(myData)
   prodData = prod(myData)
   sampleNumber = 0
@@ -452,16 +454,16 @@ phi = rep(0, NUM_SAMPLES)
 # x larger than a: "probValueOption"
 # x1 times x2 div x3: "x1x2divX3Option"
 # x1 div x2 pow x3: "x1divx2powx3Option"
-phiOption = "x1divx2powx3Option"
+phiOption = "probValueOption"
 # Phi is the prob that X>probValue
-probValue = 1.0
+probValue = 1.75
 
 # Data generation options:
 # pgamma generated: "pgamma"
 # Bo data: "bo"
 # Custom data: "custom"
 # Custom data2: "custom2"
-dataGenOption = "custom"
+dataGenOption = "custom2"
 
 
 
@@ -478,6 +480,8 @@ if(dataGenOption == "pgamma") {
   gammaData = c(0.5772030, 0.4340237, 0.4212959)
 } else if(dataGenOption == "custom2") {
   gammaData = c(1.621813, 1.059797, 1.554334)
+} else if(dataGenOption == "custom3") {
+  gammaData = c(10, 11, 12)
 }
 hist(gammaData)
 # Calculation of statistics
@@ -496,22 +500,22 @@ cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 
 # Calc Phi value for data
 phiValue = calcAveragPhiValueForData(gammaData)
-tolerance = 0.01
+tolerance = 0.02
 naiveSampler = naiveSampling2(gammaData, tolerance)
 
 # Tolerance accuracy plot
-#toleranceRange = seq(0.005, 2, 0.001)
-#resultAcceptance = rep(0, length(toleranceRange))
-#resultValue = rep(0, length(toleranceRange))
-#i = 0
-#for(tol in toleranceRange) {
-#  i = i+1
-#  result = naiveSampling2(gammaData, tol)
-#  resultAcceptance[i] = result[1]
-#  resultValue[i] = result[2]
-#}
-#plot(toleranceRange, resultValue)
-#plot(toleranceRange, resultAcceptance)
+toleranceRange = seq(0.02, 2, 0.01)
+resultAcceptance = rep(0, length(toleranceRange))
+resultValue = rep(0, length(toleranceRange))
+i = 0
+for(tol in toleranceRange) {
+  i = i+1
+  result = naiveSampling2(gammaData, tol)
+  resultAcceptance[i] = result[1]
+  resultValue[i] = result[2]
+}
+plot(toleranceRange, resultValue)
+plot(toleranceRange, resultAcceptance)
 
 # Generation of samples. Not to be used
 
@@ -545,33 +549,33 @@ naiveSampler = naiveSampling2(gammaData, tolerance)
 # unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-#NUM_GIBBS_SAMPLES = 1000000
-#xSample = gammaData
-#phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
-#gibbsObslargerWObs = 0
-#cramerNum = 0
-#for(i in 1:NUM_GIBBS_SAMPLES) {
-#  xSample = gibbsSampling(xSample)
-#  phiGibbs[i] = calcPhiGivenX(xSample)
-#  if(phiGibbs[i] >= wObs) {
-#    gibbsObslargerWObs = gibbsObslargerWObs + 1
-#  }
-#  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
-#  #print(cramerStat)
-#  if(cramerStat >= cramerObs) {
-#    cramerNum = cramerNum + 1
-#  }
-#  print(i)
-#}
-#gibbsS1 = sum(xSample)/NUM_POINTS
-#gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
-#gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
-#averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
+NUM_GIBBS_SAMPLES = 20000
+xSample = gammaData
+phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
+gibbsObslargerWObs = 0
+cramerNum = 0
+for(i in 1:NUM_GIBBS_SAMPLES) {
+  xSample = gibbsSampling(xSample)
+  phiGibbs[i] = calcPhiGivenX(xSample)
+  if(phiGibbs[i] >= wObs) {
+    gibbsObslargerWObs = gibbsObslargerWObs + 1
+  }
+  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
+  #print(cramerStat)
+  if(cramerStat >= cramerObs) {
+    cramerNum = cramerNum + 1
+  }
+  print(i)
+}
+gibbsS1 = sum(xSample)/NUM_POINTS
+gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
+gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
+averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
 ## P-values
 #cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
 # Generate samples with algorithm 2.
-NUM_SAMPLES = 1000000
+NUM_SAMPLES = 10000
 # Do in parallell
 library("parallel")
 library("foreach")
@@ -580,18 +584,40 @@ library("doParallel")
 cl = makeCluster(detectCores() - 1)
 registerDoParallel(cl, cores = detectCores() - 1)
 alg2Results = rep(0, 20)
-alg1Rsults = rep(0,20)
+alg1Results = rep(0,20)
 
-foreach(i=1:20, .packages = c("ncdf","chron","stats"),
+foreach(i=1:20, 
         .combine = rbind) %dopar% {
           try({
             alg2Results[i] = algorithm2Sampling(NUM_SAMPLES/20)
             alg1Results[i] = algorithm1Sampling(NUM_SAMPLES/20)            
+            print(i)
           })
 }
 
 stopCluster(cl)
 
+system.time({alg1Results2 = algorithm1Sampling(2000)})
+system.time({alg2Results2 = algorithm2Sampling(2000)})
+
+library("parallel")
+library("foreach")
+library("doParallel")
+
+cl = makeCluster(detectCores() - 1)
+registerDoParallel(cl, cores = detectCores() - 1)
+workers = 10
+stime = system.time({
+res = foreach(i=1:workers, 
+        .combine = rbind) %dopar% {
+          try({
+            result1 = algorithm1Sampling(20000/workers)
+          })
+        }
+})
+stopCluster(cl)
+
+alg1Results3 = (sum(res[,1]))/workers
 
 # Save image
 save.image(file="parallellTry.RData")
