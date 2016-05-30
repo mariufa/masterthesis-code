@@ -366,7 +366,6 @@ calcAveragPhiValueForData <- function(mydata) {
 }
 
 algorithm2Sampling <- function(NUM_ALG2_SAMPLES) {
-  cramerNum = 0
   vCurr = runif(NUM_POINTS)
   alphaCurr = optimfindAlpha(vCurr, s2)
   while(alphaCurr==-1) {
@@ -397,18 +396,12 @@ algorithm2Sampling <- function(NUM_ALG2_SAMPLES) {
       xSample[i] = betaCurr*invGammaCumulative(vCurr[i], alphaCurr)
     }
     phiSum = phiSum + calcPhiGivenX(xSample)
-    cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
-    if(cramerStat >= cramerObs) {
-      cramerNum = cramerNum + 1
-    }
   }
-  print((cramerNum/NUM_ALG2_SAMPLES))
   return(phiSum/NUM_ALG2_SAMPLES)
 }
 
 algorithm1Sampling <- function(NUM_ALG1_SAMPLES) {
   phiSum = 0
-  cramerNum = 0
   for(i in 1:NUM_ALG1_SAMPLES) {
     print(i)
     u = runif(NUM_POINTS)
@@ -423,40 +416,28 @@ algorithm1Sampling <- function(NUM_ALG1_SAMPLES) {
       xSample[i] = betavalue*invGammaCumulative(u[i], alphavalue)
     }
     phiSum = phiSum + calcPhiGivenX(xSample)
-    cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
-    if(cramerStat >= cramerObs) {
-      cramerNum = cramerNum + 1
-    }
   }
-  print("here")
-  print((cramerNum/NUM_ALG1_SAMPLES))
   return(phiSum/NUM_ALG1_SAMPLES)
 }
 
 naiveSampling2 <- function(myData, tolerance) {
-  NUM_NAIVE_SAMPLES = 2000
+  NUM_NAIVE_SAMPLES = 100000
   sumData = sum(myData)
   prodData = prod(myData)
   sampleNumber = 0
   sumPhi = 0
   iterations = 0
-  cramerNum = 0
   while(sampleNumber<NUM_NAIVE_SAMPLES) {
     x = rgamma(3,2,1)
     iterations = iterations + 1
     if((abs(sum(x) - sumData) < tolerance) && (abs(prod(x) - prodData) < tolerance)) {
       sumPhi = sumPhi + calcPhiGivenX(x)
       sampleNumber = sampleNumber + 1  
-      cramerStat = cramerVonMisesValueTest(x, mleAlpha, mleBeta)
-      if(cramerStat >= cramerObs) {
-        cramerNum = cramerNum + 1
-      }
       print(sampleNumber)
     }
   }
   acceptRate = sampleNumber/iterations
   averagePhi = sumPhi/sampleNumber
-  print((cramerNum/NUM_NAIVE_SAMPLES))
   return(c(acceptRate, averagePhi))
 }
 
@@ -482,16 +463,16 @@ phi = rep(0, NUM_SAMPLES)
 # x larger than a: "probValueOption"
 # x1 times x2 div x3: "x1x2divX3Option"
 # x1 div x2 pow x3: "x1divx2powx3Option"
-phiOption = "x1divx2powx3Option"
+phiOption = "probValueOption"
 # Phi is the prob that X>probValue
-probValue = 0.55
+probValue = 1.4
 
 # Data generation options:
 # pgamma generated: "pgamma"
 # Bo data: "bo"
 # Custom data: "custom"
 # Custom data2: "custom2"
-dataGenOption = "ball1"
+dataGenOption = "custom2"
 
 
 
@@ -509,27 +490,8 @@ if(dataGenOption == "pgamma") {
 } else if(dataGenOption == "custom2") {
   gammaData = c(1.621813, 1.059797, 1.554334)
 } else if(dataGenOption == "custom3") {
-  gammaData = c(5, 15, 13)
-} else if(dataGenOption == "ball1") {
-  gammaData = c(17.88, 28.92, 33.00)
-} else if(dataGenOption == "ball2") {
-  gammaData = c(41.52, 42.12, 45.60)
-} else if(dataGenOption == "ball3") {
-  gammaData = c(48.40, 51.84, 51.96)
-} else if(dataGenOption == "ball4") {
-  gammaData = c(54.12, 55.56, 67.80)
-} else if(dataGenOption == "ball5") {
-  gammaData = c(68.64, 68.64, 68.88)
-} else if(dataGenOption == "ball6") {
-  gammaData = c(84.12, 93.12, 98.64)
-} else if(dataGenOption == "ball7") {
-  gammaData = c(105.12, 105.84, 127.92)
+  gammaData = c(10, 11, 12)
 }
-
-#17.88 28.92 33.00 41.52 42.12 45.60 48.40 51.84
-#51.96 54.12 55.56 67.80 68.64 68.64 68.88 84.12
-#93.12 98.64 105.12 105.84 127.92 128.04 173.40
-
 hist(gammaData)
 # Calculation of statistics
 s1 = sum(gammaData)/NUM_POINTS
@@ -596,7 +558,7 @@ naiveSampler = naiveSampling2(gammaData, tolerance)
 # unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 2000
+NUM_GIBBS_SAMPLES = 100000
 xSample = gammaData
 phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
 gibbsObslargerWObs = 0
@@ -619,10 +581,10 @@ gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
 gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
 averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
 ## P-values
-cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
+#cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
-system.time({alg1Results2 = algorithm1Sampling(2000)})
-system.time({alg2Results2 = algorithm2Sampling(2000)})
+#system.time({alg1Results2 = algorithm1Sampling(2000)})
+#system.time({alg2Results2 = algorithm2Sampling(2000)})
 
 library("parallel")
 library("foreach")
@@ -661,48 +623,7 @@ alg2Results3 = (sum(res[,1]))/workers
 
 
 # Save image
-save.image(file="scenario119.RData")
+save.image(file="scenario111.RData")
 
 print("Done")
 
-# Plot of phi functions
-sumData = 4.23
-prodData = 2.67
-x1Seq = seq(1.01, 2, 0.001)
-phi2 = rep(0,length(x1Seq))
-phi3 = rep(0,length(x1Seq))
-for(i in 1:length(x1Seq)) {
-  if(isValidX1Proposal(x1Seq[i], sumData, prodData)) {
-    roots = findRoots(x1Seq[i], sumData, prodData)
-    phi2[i] = phi2Function(x1Seq[i], roots[1], roots[2])
-    phi3[i] = phi3Function(x1Seq[i], roots[1], roots[2])
-  }
-  
-}
-
-phi2Function <- function(x1, x2, x3) {
-  return((x1*x2/x3))
-}
-
-phi3Function <- function(x1, x2, x3) {
-  return((x1/x2)^x3)
-}
-
-plot(x1Seq, phi2)
-plot(x1Seq, phi3)
-
-# Plot of F inverse
-u = 0.5
-alphaRange = seq(0.01, 4, 0.001) 
-fInv = rep(0, length(alphaRange))
-for(i in 1:length(fInv)) {
-  fInv[i] = invGammaCumulative(u, alphaRange[i])
-}
-plot(alphaRange, fInv, type="l")
-
-diffF = rep(0, length(fInv))
-for(i in 1:length(diffF)) {
-  diffF[i] = diffAlphaInvGammaCumulative(u, alphaRange[i])
-}
-
-plot(alphaRange, diffF, type="l")

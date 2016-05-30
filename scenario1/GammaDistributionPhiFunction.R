@@ -623,7 +623,7 @@ alg2Results3 = (sum(res[,1]))/workers
 
 
 # Save image
-save.image(file="scenario11.RData")
+save.image(file="scenario111.RData")
 
 print("Done")
 
