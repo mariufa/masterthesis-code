@@ -1,5 +1,5 @@
 library(MCMCpack)
-
+library(MASS)
 
 calcWeight <- function(u, alpha) {
   # Calculates weight for given u and alpha.
@@ -287,7 +287,7 @@ GammaGibbsSampling <- function(xInit) {
       alphaMetHastings = 0
       alphaMetHastings = findGammaAlphaMetHastings(c(xCurrent[randomXpos[1]], xCurrent[randomXpos[2]], xCurrent[randomXpos[3]]), c(xProposal[randomXpos[1]], xProposal[randomXpos[2]], xProposal[randomXpos[3]]))
       acceptProb = runif(1)
-      if(is.nan(alphaMetHastings)) {
+      if(!isValidX1Proposal(xCurrent[randomXpos[1]], sumX, prodX)) {
         alphaMetHastings = 0
       }
       if(acceptProb <= alphaMetHastings) {
@@ -319,7 +319,7 @@ cramerVonMisesValueTest <- function(x, alpha, beta) {
   #   A scalar value.
   cramerSum = 0
   for(i in 1:length(x)) {
-    cramerSum = cramerSum + ((2*i - 1)/(2*length(x)) - pgamma(x[i], shape=alpha, scale=beta))^2
+    cramerSum = cramerSum + ((2*i - 1)/(2*length(x)) - pgamma(x[i], shape=alpha, rate=beta))^2
   }
   cramer = 12/(length(x)) + cramerSum
   return(cramer)
@@ -366,6 +366,8 @@ calcAveragPhiValueForData <- function(mydata) {
 }
 
 algorithm2Sampling <- function(NUM_ALG2_SAMPLES) {
+  cramerNum = 0
+  cramerStat = rep(0, NUM_ALG2_SAMPLES)
   vCurr = runif(NUM_POINTS)
   alphaCurr = optimfindAlpha(vCurr, s2)
   while(alphaCurr==-1) {
@@ -392,16 +394,29 @@ algorithm2Sampling <- function(NUM_ALG2_SAMPLES) {
     }
     betaCurr = findBeta(s1, vCurr, alphaCurr)
     xSample = rep(0, length(vCurr))
-    for(i in 1:length(vCurr)) {
-      xSample[i] = betaCurr*invGammaCumulative(vCurr[i], alphaCurr)
+    for(j in 1:length(vCurr)) {
+      xSample[j] = betaCurr*invGammaCumulative(vCurr[j], alphaCurr)
     }
     phiSum = phiSum + calcPhiGivenX(xSample)
+    cramerStat[i] = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
+    if(cramerStat[i] >= cramerObs) {
+      cramerNum = cramerNum + 1
+    }
   }
+  
+  hist(cramerStat,breaks=200, main="", xlab="Cramer values", cex.lab=1.5)
+  abline(v = cramerObs, col="red")
+  alg2sampCramer <<- cramerStat
+  
+  print((cramerNum/NUM_ALG2_SAMPLES))
+  alg2pvalue <<- (cramerNum/NUM_ALG2_SAMPLES)
   return(phiSum/NUM_ALG2_SAMPLES)
 }
 
 algorithm1Sampling <- function(NUM_ALG1_SAMPLES) {
   phiSum = 0
+  cramerNum = 0
+  cramerStat = rep(0, NUM_ALG1_SAMPLES)
   for(i in 1:NUM_ALG1_SAMPLES) {
     print(i)
     u = runif(NUM_POINTS)
@@ -412,32 +427,56 @@ algorithm1Sampling <- function(NUM_ALG1_SAMPLES) {
     }
     betavalue = findBeta(s1, u, alphavalue)
     xSample = rep(0, length(u))
-    for(i in 1:length(u)) {
-      xSample[i] = betavalue*invGammaCumulative(u[i], alphavalue)
+    for(j in 1:length(u)) {
+      xSample[j] = betavalue*invGammaCumulative(u[j], alphavalue)
     }
     phiSum = phiSum + calcPhiGivenX(xSample)
+    cramerStat[i] = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
+    #print(cramerStat[i])
+    if(cramerStat[i] >= cramerObs) {
+      cramerNum = cramerNum + 1
+    }
   }
+  print("here")
+  print((cramerNum/NUM_ALG1_SAMPLES))
+  hist(cramerStat,breaks=200, main="", xlab="Cramer values", cex.lab=1.5)
+  abline(v = cramerObs, col="red")
+  alg1sampCramer <<- cramerStat
+  alg1pvalue <<- (cramerNum/NUM_ALG1_SAMPLES)
   return(phiSum/NUM_ALG1_SAMPLES)
 }
 
-naiveSampling2 <- function(myData, tolerance) {
-  NUM_NAIVE_SAMPLES = 100000
+naiveSampling2 <- function(myData, tolerance, mleAlpha, mleBeta) {
+  NUM_NAIVE_SAMPLES = NUM_SAMPLES
   sumData = sum(myData)
   prodData = prod(myData)
   sampleNumber = 0
   sumPhi = 0
   iterations = 0
+  cramerNum = 0
+  cramerStat = rep(0, NUM_NAIVE_SAMPLES)
   while(sampleNumber<NUM_NAIVE_SAMPLES) {
-    x = rgamma(3,2,1)
+    x = rgamma(3, shape = mleAlpha, rate = mleBeta)
     iterations = iterations + 1
     if((abs(sum(x) - sumData) < tolerance) && (abs(prod(x) - prodData) < tolerance)) {
       sumPhi = sumPhi + calcPhiGivenX(x)
       sampleNumber = sampleNumber + 1  
+      cramerStat[sampleNumber] = cramerVonMisesValueTest(x, mleAlpha, mleBeta)
+      if(cramerStat[sampleNumber] >= cramerObs) {
+        cramerNum = cramerNum + 1
+      }
       print(sampleNumber)
     }
   }
+  
+  hist(cramerStat,breaks=200, main="", xlab="Cramer values", cex.lab=1.5)
+  abline(v = cramerObs, col="red")
+  
   acceptRate = sampleNumber/iterations
   averagePhi = sumPhi/sampleNumber
+  print((cramerNum/NUM_NAIVE_SAMPLES))
+  naivePvalue <<- (cramerNum/NUM_NAIVE_SAMPLES)
+  naiveCramers <<- cramerStat
   return(c(acceptRate, averagePhi))
 }
 
@@ -446,7 +485,7 @@ beta = 1
 hStep = 0.01
 alphaHStep = 0.01
 method = "pgamma"
-NUM_SAMPLES = 1000
+NUM_SAMPLES = 100000
 NUM_POINTS = 3
 alphaUpperBound = 200
 alphaLowerBound = 0.05
@@ -505,6 +544,10 @@ if(dataGenOption == "pgamma") {
   gammaData = c(84.12, 93.12, 98.64)
 } else if(dataGenOption == "ball7") {
   gammaData = c(105.12, 105.84, 127.92)
+} else if(dataGenOption == "custom4") {
+  gammaData = c(0.40, 0.42, 0.43)
+} else if(dataGenOption == "custom5") {
+  gammaData = c(0.72, 0.72, 0.85)
 }
 
 #17.88 28.92 33.00 41.52 42.12 45.60 48.40 51.84
@@ -516,11 +559,9 @@ hist(gammaData)
 s1 = sum(gammaData)/NUM_POINTS
 s2 = NUM_POINTS*((prod(gammaData))^(1/NUM_POINTS))/sum(gammaData)
 # Log-likelihood
-negativeloglikihood = negativeLogLikelihoodGamma(c(alpha, beta), gammaData)
-mleEstimators = findGammaMLE(gammaData)
-mleAlpha = mleEstimators[1]
-mleBeta = mleEstimators[2]
-maxLogLikelihood = - negativeLogLikelihoodGamma(c(mleAlpha, mleBeta), gammaData)
+mleEstimators = fitdistr(gammaData, "gamma")
+mleAlpha = mleEstimators$estimate[1]
+mleBeta = mleEstimators$estimate[2]
 # w statistic obs. Not to be used yet.
 wObs = calcPhiGivenX(gammaData)
 cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
@@ -528,8 +569,10 @@ cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 
 # Calc Phi value for data
 #phiValue = calcAveragPhiValueForData(gammaData)
-#tolerance = 0.005
-#naiveSampler = naiveSampling2(gammaData, tolerance)
+tolerance = 0.005
+naiveCramers = rep(0,100000)
+naivePvalue = 0
+#naiveSampler = naiveSampling2(gammaData, tolerance, mleAlpha, mleBeta)
 
 ## Tolerance accuracy plot
 #toleranceRange = seq(0.02, 2, 0.01)
@@ -577,20 +620,21 @@ cramerObs = cramerVonMisesValueTest(gammaData, mleAlpha, mleBeta)
 # unweightedExpectedPhi = sum(phi)/NUM_SAMPLES
 
 # Gibbs sampling
-NUM_GIBBS_SAMPLES = 100000
+NUM_GIBBS_SAMPLES = NUM_SAMPLES
 xSample = gammaData
 phiGibbs = rep(0, NUM_GIBBS_SAMPLES)
 gibbsObslargerWObs = 0
 cramerNum = 0
+cramerStatGibbs = rep(0, NUM_GIBBS_SAMPLES)
 for(i in 1:NUM_GIBBS_SAMPLES) {
   xSample = gibbsSampling(xSample)
   phiGibbs[i] = calcPhiGivenX(xSample)
   if(phiGibbs[i] >= wObs) {
     gibbsObslargerWObs = gibbsObslargerWObs + 1
   }
-  cramerStat = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
+  cramerStatGibbs[i] = cramerVonMisesValueTest(xSample, mleAlpha, mleBeta)
   #print(cramerStat)
-  if(cramerStat >= cramerObs) {
+  if(cramerStatGibbs[i] >= cramerObs) {
     cramerNum = cramerNum + 1
   }
   print(i)
@@ -600,49 +644,120 @@ gibbsS2 = NUM_POINTS*((prod(xSample))^(1/NUM_POINTS))/sum(xSample)
 gibbsPvalue = gibbsObslargerWObs/NUM_GIBBS_SAMPLES
 averagePhiGibbs = sum(phiGibbs)/NUM_GIBBS_SAMPLES
 ## P-values
-#cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
+cramerPValue = cramerNum/NUM_GIBBS_SAMPLES
 
-#system.time({alg1Results2 = algorithm1Sampling(2000)})
-#system.time({alg2Results2 = algorithm2Sampling(2000)})
+hist(cramerStatGibbs,breaks=200, main="", xlab="Cramer values", cex.lab=1.5)
+abline(v = cramerObs, col="red")
 
-library("parallel")
-library("foreach")
-library("doParallel")
+alg2sampCramer = rep(1, 100000)
+alg1sampCramer = rep(1, 100000)
+alg2pvalue = 0
+alg1pvalue = 0
 
-cl = makeCluster(detectCores() - 1)
-registerDoParallel(cl, cores = detectCores() - 1)
-workers = 10
-stime = system.time({
-res = foreach(i=1:workers, 
-        .combine = rbind) %dopar% {
-          try({
-            result1 = algorithm1Sampling(100000/workers)
-          })
-        }
-})
-stopCluster(cl)
+system.time({alg1Results2 = algorithm1Sampling(NUM_SAMPLES)})
+system.time({alg2Results2 = algorithm2Sampling(NUM_SAMPLES)})
 
-alg1Results3 = (sum(res[,1]))/workers
+#library("parallel")
+#library("foreach")
+#library("doParallel")
+#
+#cl = makeCluster(detectCores() - 1)
+#registerDoParallel(cl, cores = detectCores() - 1)
+#workers = 10
+#stime = system.time({
+#res = foreach(i=1:workers, 
+#        .combine = rbind) %dopar% {
+#          try({
+#            result1 = algorithm1Sampling(100000/workers)
+#          })
+#        }
+#})
+#stopCluster(cl)
+#
+#alg1Results3 = (sum(res[,1]))/workers
+#
+#cl = makeCluster(detectCores() - 1)
+#registerDoParallel(cl, cores = detectCores() - 1)
+#workers = 10
+#stime = system.time({
+#  res = foreach(i=1:workers, 
+#                .combine = rbind) %dopar% {
+#                  try({
+#                    result1 = algorithm2Sampling(100/workers)
+#                  })
+#                }
+#})
+#stopCluster(cl)
+#
+#alg2Results3 = (sum(res[,1]))/workers
+#
+#
+#
+## Save image
+save.image(file="scen26.RData")
 
-cl = makeCluster(detectCores() - 1)
-registerDoParallel(cl, cores = detectCores() - 1)
-workers = 10
-stime = system.time({
-  res = foreach(i=1:workers, 
-                .combine = rbind) %dopar% {
-                  try({
-                    result1 = algorithm2Sampling(100000/workers)
-                  })
-                }
-})
-stopCluster(cl)
-
-alg2Results3 = (sum(res[,1]))/workers
-
-
-
-# Save image
-save.image(file="scenario216.RData")
-
-print("Done")
-
+#print("Done")
+#
+## Plot of phi functions
+#sumData = 4.23
+#prodData = 2.67
+#x1Seq = seq(1.01, 2, 0.001)
+#phi2 = rep(0,length(x1Seq))
+#phi3 = rep(0,length(x1Seq))
+#for(i in 1:length(x1Seq)) {
+#  if(isValidX1Proposal(x1Seq[i], sumData, prodData)) {
+#    roots = findRoots(x1Seq[i], sumData, prodData)
+#    phi2[i] = phi2Function(x1Seq[i], roots[1], roots[2])
+#    phi3[i] = phi3Function(x1Seq[i], roots[1], roots[2])
+#  }
+#  
+#}
+#
+#phi2Function <- function(x1, x2, x3) {
+#  return((x1*x2/x3))
+#}
+#
+#phi3Function <- function(x1, x2, x3) {
+#  return((x1/x2)^x3)
+#}
+#
+#plot(x1Seq, phi2)
+#plot(x1Seq, phi3)
+#
+## Plot of F inverse
+#u = 0.5
+#alphaRange = seq(0.01, 4, 0.001) 
+#fInv = rep(0, length(alphaRange))
+#for(i in 1:length(fInv)) {
+#  fInv[i] = invGammaCumulative(u, alphaRange[i])
+#}
+#plot(alphaRange, fInv, type="l")
+#
+#diffF = rep(0, length(fInv))
+#for(i in 1:length(diffF)) {
+#  diffF[i] = diffAlphaInvGammaCumulative(u, alphaRange[i])
+#}
+#
+#plot(alphaRange, diffF, type="l")
+#
+#
+#globalvarTest = matrix(0, 10, 10)
+#
+#testFunction <- function(i) {
+#  globalvarTest[,i] <<- rep(i,10)
+#  return(0)
+#}
+#
+#cl = makeCluster(detectCores() - 1)
+#registerDoParallel(cl, cores = detectCores() - 1)
+#workers = 10
+#stime = system.time({
+#  res = foreach(i=1:workers, 
+#                .combine = rbind) %dopar% {
+#                  try({
+#                    testFunction(i)
+#                  })
+#                }
+#})
+#stopCluster(cl)
+#
